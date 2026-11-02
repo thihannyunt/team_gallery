@@ -1,19 +1,20 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
-import { showMenu } from './menu.js';
 import { resetTouchInput } from './touchControls.js';
 import { keysPressed } from './movement.js';
 
 // Exit door on the back wall, near where visitors start, under a glowing green EXIT sign. Walking
-// into it leaves the gallery: back to the menu, and the next visit starts at the entrance again.
+// into it asks the visitor to confirm, then leaves the gallery for the Court Connect site.
 
 const DOOR = { x: 8.5, width: 1.0 * UNITS_PER_METER, height: 2.1 * UNITS_PER_METER };
 const WALL_Z = 20; // back wall
 const TRIGGER_DEPTH = 1.6; // how close to the wall (scene units) counts as walking through
-const START = { x: 0, y: 2, z: 15 }; // where exploring starts (scene.js)
+const STEP_BACK = 1.5; // the visitor is moved this far off the doormat while asked, so "Stay" doesn't ask again
+const EXIT_URL = 'https://cconnect.tspdigital.solutions/';
 
 let camera;
 let controls;
+let relockOnClose = false; // desktop: go back to mouse-look after "Stay" if it was on before
 
 const signTexture = (text, sub) => {
   const canvas = document.createElement('canvas');
@@ -73,7 +74,7 @@ const createDoor = () => {
   bar.position.set(0, 1.0 * UNITS_PER_METER, 0.22);
   const plaque = new THREE.Mesh(
     new THREE.PlaneGeometry(1.5, 0.56),
-    new THREE.MeshBasicMaterial({ map: signTexture('EXIT', 'BACK TO MENU') })
+    new THREE.MeshBasicMaterial({ map: signTexture('EXIT', 'TO COURT CONNECT') })
   );
   plaque.position.set(-DOOR.width * 0.12, DOOR.height * 0.68, 0.101);
   door.add(leaf, glass, bar, plaque);
@@ -104,24 +105,60 @@ const createDoor = () => {
   return door;
 };
 
-const leaveGallery = () => {
-  camera.position.set(START.x, START.y, START.z);
-  camera.rotation.set(0, 0, 0, 'YXZ');
+const dialog = () => document.getElementById('exit-dialog');
+const isAskingToLeave = () => dialog().classList.contains('show');
+
+const askToLeave = () => {
+  camera.position.z = WALL_Z - TRIGGER_DEPTH - STEP_BACK;
   resetTouchInput();
-  Object.keys(keysPressed).forEach((key) => (keysPressed[key] = false)); // a held key shouldn't walk on behind the menu
+  Object.keys(keysPressed).forEach((key) => (keysPressed[key] = false)); // a held key shouldn't walk on behind the dialog
+
+  // Free the mouse so the buttons can be clicked
+  relockOnClose = controls.isLocked;
   if (controls.isLocked) controls.unlock();
-  showMenu();
+
+  dialog().classList.add('show');
+  document.getElementById('exit-stay').focus();
+};
+
+const stay = ({ relock }) => {
+  dialog().classList.remove('show');
+  // Pointer lock needs a click, so pressing Esc leaves the mouse free (Enter resumes)
+  if (relock && relockOnClose) controls.lock();
+  relockOnClose = false;
 };
 
 export const setupExitDoor = (scene, playerCamera, pointerLockControls) => {
   camera = playerCamera;
   controls = pointerLockControls;
   scene.add(createDoor());
+
+  document.getElementById('exit-confirm').addEventListener('click', () => window.location.assign(EXIT_URL));
+  document.getElementById('exit-stay').addEventListener('click', () => stay({ relock: true }));
+  // Clicking the dark area around the card also stays
+  dialog().addEventListener('click', (event) => {
+    if (event.target === dialog()) stay({ relock: true });
+  });
+
+  // While open, keys belong to the dialog: Esc stays instead of opening the menu,
+  // and W/A/S/D don't walk around behind it (keyup still passes so keys can't get stuck)
+  window.addEventListener(
+    'keydown',
+    (event) => {
+      if (!isAskingToLeave()) return;
+      event.stopImmediatePropagation();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        stay({ relock: false });
+      }
+    },
+    true
+  );
 };
 
 // Called every frame from the render loop
 export const updateExitDoor = () => {
-  if (!camera || !document.body.classList.contains('exploring')) return;
+  if (!camera || !document.body.classList.contains('exploring') || isAskingToLeave()) return;
   const { x, z } = camera.position;
-  if (Math.abs(x - DOOR.x) < DOOR.width / 2 && z > WALL_Z - TRIGGER_DEPTH) leaveGallery();
+  if (Math.abs(x - DOOR.x) < DOOR.width / 2 && z > WALL_Z - TRIGGER_DEPTH) askToLeave();
 };
