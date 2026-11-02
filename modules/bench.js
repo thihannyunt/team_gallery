@@ -6,7 +6,7 @@ export const loadBenchModel = (scene) => {
   const loader = new GLTFLoader();
   const gui = new GUI();
 
-  loader.load("../public/models/bench_2/scene.gltf", (gltf) => {
+  loader.load("models/bench_2/scene.gltf", (gltf) => {
     const bench = gltf.scene;
     console.log("BENCH", gltf);
 

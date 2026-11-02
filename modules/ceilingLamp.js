@@ -6,7 +6,7 @@ export const loadCeilingLampModel = (scene) => {
   const loader = new GLTFLoader();
   const gui = new GUI();
 
-  loader.load("../public/models/ceiling-lamp/scene.gltf", (gltf) => {
+  loader.load("models/ceiling-lamp/scene.gltf", (gltf) => {
     const lamp = gltf.scene;
 
     console.log("Ceiling Lamp", gltf);

@@ -6,7 +6,7 @@ export const loadStatueModel = (scene) => {
   const loader = new GLTFLoader();
 
   loader.load(
-    "../public/models/statue/scene.gltf",
+    "models/statue/scene.gltf",
     (gltf) => {
       const statue = gltf.scene;
 
