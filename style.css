@@ -1,0 +1,931 @@
+/* Add Animate.css to your project */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
+/* Court Connect brand colours (from cconnect.tspdigital.solutions) */
+:root {
+  --cc-teal: #024b4a;
+  --cc-teal-deep: #013635;
+  --cc-teal-glass: rgba(2, 75, 74, 0.88);
+  --cc-lime: #d0eb00;
+  --cc-lime-hover: #def52d;
+  --cc-cream: #f6f4ef;
+  --cc-cream-muted: rgba(246, 244, 239, 0.72);
+  --cc-cream-faint: rgba(246, 244, 239, 0.22);
+  --cc-ink: #0d1111;
+  --cc-ink-glass: rgba(13, 17, 17, 0.82);
+  --cc-gold: #c9a227;
+  --cc-font: Manrope, system-ui, -apple-system, "Helvetica Neue", Arial,
+    sans-serif;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-size: 12px;
+  color: var(--cc-ink);
+  margin: 0em;
+}
+
+body {
+  margin: 0em;
+  padding: 0em;
+  overflow: hidden;
+  font-family: var(--cc-font);
+  background-color: var(--cc-ink);
+  -webkit-font-smoothing: antialiased;
+  cursor: url("http://www.rw-designer.com/cursor-view/97756.png") 16 16, auto;
+}
+
+button {
+  font-family: inherit;
+}
+
+p,
+img,
+div,
+canvas {
+  vertical-align: top;
+}
+
+::-moz-selection {
+  /* Code for Firefox */
+  background: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+::selection {
+  /* Code for Chrome, Safari and Opera */
+  background: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+.hide {
+  display: none;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Start menu */
+
+#menu {
+  width: 40em;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--cc-cream);
+  background: radial-gradient(
+      120% 90% at 50% 0%,
+      #036664 0%,
+      var(--cc-teal) 45%,
+      var(--cc-teal-deep) 100%
+    );
+  border: 1px solid rgba(208, 235, 0, 0.18);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(2, 24, 24, 0.55);
+  overflow: hidden;
+  animation: fadeInSlideUp 0.6s ease-out;
+}
+
+#menu_court {
+  position: absolute;
+  inset: 1.5em;
+  width: calc(100% - 3em);
+  height: calc(100% - 3em);
+  fill: none;
+  stroke: var(--cc-lime);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.13;
+  pointer-events: none;
+}
+
+#menu_court line,
+#menu_court rect {
+  vector-effect: non-scaling-stroke;
+}
+
+#menu_court .net {
+  stroke: var(--cc-cream);
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+#menu #content {
+  position: relative;
+  padding: 2.5em 2.5em 1.75em;
+}
+
+#menu .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-weight: 800;
+  font-size: 0.95em;
+  letter-spacing: 0.04em;
+  color: var(--cc-cream);
+}
+
+#menu .brand-mark {
+  width: 2.25em;
+  height: 2.25em;
+  border-radius: 7px;
+  box-shadow: 0 0 0 1px var(--cc-cream-faint);
+}
+
+#menu #content p.eyebrow {
+  margin: 1.75em auto 0.5em;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+#menu h1 {
+  margin: 0 0 0.4em;
+  font-size: 2.6em;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--cc-cream);
+}
+
+#menu h1 span {
+  color: var(--cc-lime);
+}
+
+#menu #content p {
+  max-width: 28em;
+  margin: 0.5em auto;
+  font-size: 1em;
+  line-height: 1.6;
+  color: var(--cc-cream-muted);
+}
+
+#menu #content p.lede {
+  font-size: 1.15em;
+  font-weight: 600;
+  color: var(--cc-cream);
+}
+
+#menu #play_button {
+  display: inline-block;
+  margin: 1.5em 0 1em;
+  padding: 0.85em 2.25em;
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+  border-radius: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 8px 24px rgba(208, 235, 0, 0.22);
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+#menu #play_button:hover {
+  background-color: var(--cc-lime-hover);
+  cursor: pointer;
+  transform: translateY(-2px);
+}
+
+#menu .menu-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6em;
+}
+
+#about_button,
+#touch_toggle {
+  background: transparent;
+  color: var(--cc-cream);
+  border: 1px solid var(--cc-cream-faint);
+  border-radius: 999px;
+  padding: 0.55em 1.25em;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+#about_button:hover,
+#touch_toggle:hover {
+  background-color: rgba(246, 244, 239, 0.08);
+  border-color: rgba(246, 244, 239, 0.45);
+}
+
+#menu #content p.credit {
+  margin: 1.75em auto 0;
+  padding-top: 1.25em;
+  border-top: 1px solid rgba(246, 244, 239, 0.12);
+  font-size: 0.8em;
+  color: rgba(246, 244, 239, 0.5);
+}
+
+@keyframes fadeInSlideUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 24px));
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Teammate info card */
+
+#painting-info {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: var(--cc-ink-glass);
+  border-left: 4px solid var(--cc-lime);
+  padding: 20px;
+  border-radius: 12px;
+  font-family: var(--cc-font);
+  color: var(--cc-cream);
+  width: 300px;
+  height: 150px;
+  z-index: 1;
+  transition: all 0.3s ease-in-out;
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+#painting-info.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+#painting-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 2em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+#painting-info p {
+  margin: 0;
+  font-size: 1.2em;
+  color: var(--cc-cream-muted);
+}
+
+/* Controls panel */
+
+#info-panel {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 200px;
+  background-color: var(--cc-teal-glass);
+  border: 1px solid rgba(208, 235, 0, 0.18);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--cc-cream);
+  box-shadow: 0 12px 32px rgba(2, 24, 24, 0.45);
+  overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+#info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+#info-header h3 {
+  font-size: 1.4em;
+  font-weight: 800;
+  margin: 0;
+}
+
+#info-header button {
+  background-color: var(--cc-lime);
+  border: none;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--cc-ink);
+}
+
+#info-content {
+  font-size: 1em;
+  line-height: 1.5em;
+  color: var(--cc-cream-muted);
+}
+
+#info-content b {
+  color: var(--cc-cream);
+}
+
+#info-content p {
+  margin: 5px 0;
+}
+
+#info-panel.collapsed #info-content {
+  max-height: 0;
+  overflow: hidden;
+}
+
+#info-panel.collapsed #info-header {
+  margin-bottom: 0;
+}
+
+/* About page */
+
+#about-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #012827;
+  color: var(--cc-cream-muted);
+  padding: 50px max(50px, calc((100% - 720px) / 2));
+  box-sizing: border-box;
+  font-size: 1.25em;
+  line-height: 1.65;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease-in-out;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+#about-overlay.show {
+  transform: translateY(0);
+}
+
+#about-overlay h1 {
+  margin-top: 0;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--cc-cream);
+}
+
+#about-overlay a {
+  color: var(--cc-lime);
+}
+
+#about-overlay h2 {
+  margin: 1.6em 0 0.6em;
+  font-size: 1.05em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+#about-overlay h3 {
+  margin: 0 0 4px;
+  font-size: 1em;
+  font-weight: 800;
+  color: var(--cc-cream);
+}
+
+#about-overlay .about-eyebrow {
+  margin: 0 0 0.4em;
+  font-size: 0.75em;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+#about-overlay .about-tagline {
+  font-weight: 700;
+  color: var(--cc-cream);
+}
+
+.about-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-highlights li {
+  padding: 4px 14px;
+  border: 1px solid rgba(208, 235, 0, 0.5);
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--cc-cream);
+}
+
+.about-features,
+.about-crew {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.about-feature,
+.about-member {
+  padding: 16px;
+  border-radius: 12px;
+  background-color: rgba(246, 244, 239, 0.06);
+  border: 1px solid var(--cc-cream-faint);
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+.about-feature p,
+.about-member p {
+  margin: 0;
+}
+
+.about-member .about-role {
+  margin-bottom: 8px;
+  font-size: 0.8em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+.about-member .about-quote {
+  margin-bottom: 6px;
+  font-style: italic;
+  color: var(--cc-cream);
+}
+
+.about-member .about-portfolio {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 700;
+}
+
+#about-overlay .about-help {
+  font-size: 0.75em;
+  color: var(--cc-cream-muted);
+}
+
+#close-about {
+  background: none;
+  border: 1px solid var(--cc-cream-faint);
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+  color: var(--cc-cream);
+  font-size: 1.1em;
+  font-weight: 700;
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  cursor: pointer;
+}
+
+#close-about:hover {
+  background-color: rgba(246, 244, 239, 0.08);
+}
+
+/* "Sit & watch" / "Stand up" near the lounge seats (see modules/seating.js) */
+
+#seat-button {
+  position: fixed;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 12px 22px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+  font-family: var(--cc-font);
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+#seat-button[hidden] {
+  display: none;
+}
+
+/* Above the joystick and controls panel on touch screens */
+body.touch-mode #seat-button {
+  bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
+}
+
+/* Keyboard shortcut hints, hidden on touch screens */
+body.touch-mode .key-hint {
+  display: none;
+}
+
+/* Full-size photo pop-up (see modules/photoViewer.js) */
+
+#photo-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 2000; /* above lil-gui and the touch controls */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(64px + env(safe-area-inset-top)) 16px
+    calc(24px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background-color: rgba(13, 17, 17, 0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s;
+}
+
+#photo-viewer.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+#photo-viewer figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#photo-viewer img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 190px);
+  max-height: calc(100dvh - 190px);
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+#photo-viewer figcaption {
+  text-align: center;
+  font-family: var(--cc-font);
+}
+
+#photo-viewer h3 {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--cc-lime);
+}
+
+#photo-viewer p {
+  margin: 4px 0 0;
+  color: var(--cc-cream-muted);
+}
+
+#photo-viewer-description {
+  max-width: 560px;
+  font-size: 0.9em;
+}
+
+#photo-viewer-portfolio {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+  font-family: var(--cc-font);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+#photo-viewer-portfolio[hidden] {
+  display: none;
+}
+
+#close-photo {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  right: calc(16px + env(safe-area-inset-right));
+  width: 44px;
+  height: 44px;
+  background-color: rgba(13, 17, 17, 0.6);
+  border: 1px solid var(--cc-cream-faint);
+  border-radius: 999px;
+  color: var(--cc-cream);
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#close-photo:hover {
+  background-color: rgba(246, 244, 239, 0.12);
+}
+
+/* Audio guide buttons */
+
+#audio_controls {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 2; /* To make sure it shows up on top of other elements */
+}
+
+#audio_controls button {
+  display: block;
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  border: 1px solid rgba(208, 235, 0, 0.18);
+  border-radius: 10px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#audio_controls button:hover {
+  background-color: var(--cc-teal);
+  border-color: var(--cc-lime);
+}
+
+/* Touch controls (phones and tablets, see modules/touchControls.js) */
+
+#touch-ui {
+  display: none;
+}
+
+body.touch-mode.exploring #touch-ui {
+  display: block;
+}
+
+body.touch-mode {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+}
+
+body.touch-mode canvas {
+  touch-action: none; /* we handle drags ourselves, stop the browser scrolling/zooming */
+}
+
+body.touch-mode button {
+  touch-action: manipulation; /* no double-tap zoom on buttons */
+}
+
+/* Menu and view switch share one row at the top left, audio icons sit at the top right */
+#touch-top-bar {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+}
+
+#touch-menu-button,
+#touch-view-button {
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  border: 1px solid rgba(208, 235, 0, 0.18);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#joystick {
+  position: fixed;
+  left: calc(24px + env(safe-area-inset-left));
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  /* 120px on phones, growing with the screen up to 200px on large tablets */
+  width: clamp(120px, 24vmin, 200px);
+  height: clamp(120px, 24vmin, 200px);
+  border-radius: 50%;
+  background-color: rgba(2, 75, 74, 0.4);
+  border: 2px solid rgba(208, 235, 0, 0.55);
+  touch-action: none;
+  z-index: 3;
+}
+
+#joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 43%;
+  height: 43%;
+  margin: -21.5% 0 0 -21.5%; /* percentages of the base's width, which equals its height */
+  border-radius: 50%;
+  background-color: rgba(208, 235, 0, 0.9);
+  pointer-events: none;
+}
+
+.touch-help {
+  display: none;
+}
+
+body.touch-mode .touch-help {
+  display: block;
+}
+
+body.touch-mode .keyboard-help {
+  display: none;
+}
+
+body.touch-mode #info-panel {
+  width: 150px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  right: calc(10px + env(safe-area-inset-right));
+}
+
+body.touch-mode #audio_controls {
+  display: flex;
+  gap: 6px;
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+}
+
+body.touch-mode #audio_controls button {
+  margin-bottom: 0;
+  padding: 10px; /* same height as the menu buttons on the left */
+  font-size: 16px;
+  line-height: 1;
+}
+
+.touch-icon {
+  display: none;
+}
+
+body.touch-mode .touch-icon {
+  display: inline;
+}
+
+body.touch-mode .button-label {
+  display: none;
+}
+
+/* Painting info sits under the top button row instead of covering the joystick */
+body.touch-mode #painting-info {
+  top: calc(56px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  width: auto;
+  max-width: min(360px, calc(100vw - 20px));
+  height: auto;
+  max-height: 35vh;
+  overflow: hidden;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+body.touch-mode #painting-info h3 {
+  font-size: 1.4em;
+  margin-bottom: 6px;
+}
+
+body.touch-mode #painting-info p {
+  font-size: 1em;
+}
+
+/* "Turn your phone sideways" reminders, only for touch screens held upright */
+
+.rotate-hint {
+  display: none;
+}
+
+#menu #content p.rotate-hint {
+  color: var(--cc-lime);
+  font-weight: 600;
+}
+
+#rotate-toast {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  body.touch-mode .rotate-hint {
+    display: block;
+  }
+
+  body.touch-mode.exploring #rotate-toast.show {
+    display: flex;
+  }
+}
+
+#rotate-toast {
+  position: fixed;
+  top: calc(56px + env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  z-index: 4;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 14px;
+  border-radius: 999px;
+  background-color: var(--cc-ink-glass);
+  border: 1px solid rgba(208, 235, 0, 0.35);
+  color: var(--cc-cream);
+  font-size: 13px;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+#close-rotate-toast {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--cc-cream-faint);
+  background: none;
+  color: var(--cc-cream);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Small screens: keep the menu and about page inside the viewport */
+
+#menu {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  #menu {
+    font-size: 1em;
+  }
+
+  #menu #content {
+    padding: 2em 1.25em 1.5em;
+  }
+
+  #menu h1 {
+    font-size: 2.1em;
+  }
+
+  #about-overlay {
+    padding: 60px 20px 20px;
+    font-size: 1.1em;
+    overflow-y: auto;
+  }
+}
+
+@media (max-height: 500px) {
+  #menu {
+    font-size: 1em;
+  }
+
+  #menu #content {
+    padding: 1.25em 1.5em 1em;
+  }
+
+  #menu #content p.eyebrow {
+    margin-top: 0.75em;
+  }
+
+  #menu h1 {
+    font-size: 1.8em;
+  }
+
+  #menu #content p {
+    line-height: 1.4;
+  }
+
+  #menu #play_button {
+    margin: 0.75em 0;
+  }
+
+  #menu #content p.credit {
+    margin-top: 1em;
+    padding-top: 0.75em;
+  }
+
+  #about-overlay {
+    padding-top: 40px;
+    overflow-y: auto;
+  }
+}
+
+/* The lil-gui debug panels would cover the whole screen on a phone */
+body.touch-mode .lil-gui.root {
+  display: none;
+}
