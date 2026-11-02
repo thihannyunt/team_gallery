@@ -12,7 +12,9 @@ import { createCharacter } from './character.js';
 //   so the character never blocks the middle of the screen
 // - it stays high enough that the floor doesn't fill half the screen
 
-const STORAGE_KEY = 'viewMode'; // remembers first/third person between visits
+// Remembers the visitor's own first/third person switch between visits. Renamed from 'viewMode',
+// which older versions saved on every load, so everyone now starts in first person.
+const STORAGE_KEY = 'viewModeChoice';
 const SHOULDER_OFFSET = new THREE.Vector3(2.2, 3.2, 11); // right, up and behind the player's eyes
 const FOCUS_DISTANCE = 12; // the camera aims at the spot this far ahead of the player's eyes
 const ROOM_LIMIT = 19.2; // walls stand at ±20, keep the camera on this side of them
@@ -21,7 +23,7 @@ const CEILING_LIMIT = 9.5; // ceiling is at y = 10
 let playerCamera;
 let viewCamera;
 let character;
-let thirdPerson = true;
+let thirdPerson = false;
 const lastPosition = new THREE.Vector3();
 const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const offset = new THREE.Vector3();
@@ -35,8 +37,13 @@ const setThirdPerson = (on) => {
   thirdPerson = on;
   character.object.visible = on;
   document.getElementById('touch-view-button').innerText = on ? '👁 1st person' : '👁 3rd person';
+};
+
+// Only a switch the visitor makes is remembered, never the default
+const switchView = () => {
+  setThirdPerson(!thirdPerson);
   try {
-    localStorage.setItem(STORAGE_KEY, on ? 'third' : 'first');
+    localStorage.setItem(STORAGE_KEY, thirdPerson ? 'third' : 'first');
   } catch {
     // storage blocked (private mode etc.), the choice just won't be remembered
   }
@@ -59,11 +66,11 @@ export const setupPlayerView = (scene, camera) => {
   lastPosition.copy(camera.position);
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'v') setThirdPerson(!thirdPerson);
+    if (event.key === 'v') switchView();
   });
-  document.getElementById('touch-view-button').addEventListener('click', () => setThirdPerson(!thirdPerson));
+  document.getElementById('touch-view-button').addEventListener('click', switchView);
 
-  setThirdPerson(readSavedView() !== 'first');
+  setThirdPerson(readSavedView() === 'third'); // first person unless the visitor picked third
 };
 
 // Sit the character down facing `bodyYaw`, or stand up with null (see seating.js)
