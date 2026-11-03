@@ -237,6 +237,33 @@ body.exploring #intro-video {
   text-shadow: 0 0 2px rgba(246, 244, 239, 0.95), 0 0 6px rgba(246, 244, 239, 0.85), 0 0 14px rgba(246, 244, 239, 0.9);
 }
 
+/* Upright screens letterbox the video (see #intro-video below), so the title sits on the black bar
+   above it rather than on the gallery: light text there instead */
+@media (orientation: portrait) {
+  /* Sits just above the video instead of up at the status bar. The 16:9 video is centred, so its
+     top edge is half the screen height minus 9/32 of the screen width up from the middle. */
+  #landing-title {
+    top: auto;
+    bottom: calc(50% + 28.125vw + 64px);
+  }
+
+  /* and the buttons just below it */
+  #menu {
+    top: calc(50% + 28.125vw + 64px);
+    bottom: auto;
+  }
+
+  #landing-title h1,
+  #landing-title p {
+    color: var(--cc-cream);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  }
+
+  #landing-title h1 span {
+    color: var(--cc-gold);
+  }
+}
+
 body.exploring #landing-title {
   display: none;
 }
