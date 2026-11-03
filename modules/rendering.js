@@ -7,6 +7,9 @@ import { updateSeating } from "./seating.js";
 import { updateExitDoor } from "./exitDoor.js";
 import { updateArcade } from "./arcade.js";
 import { updatePhotoPrompt } from "./photoPrompt.js";
+import { updateBarDrinks } from "./barDrinks.js";
+import { updateArcadePlay, isAtArcade } from "./arcadePlay.js";
+import { updateInstrumentPlay } from "./instrumentPlay.js";
 
 export const setupRendering = (
   scene,
@@ -22,9 +25,12 @@ export const setupRendering = (
     const delta = clock.getDelta();
 
     updateSeating(); // before movement, so starting to walk gets you up from a seat first
-    updateMovement(delta, controls, camera, walls);
+    updateArcadePlay(delta); // at the cabinet the camera is the game's, not the walker's
+    if (!isAtArcade()) updateMovement(delta, controls, camera, walls);
     updateExitDoor();
     updatePhotoPrompt();
+    updateInstrumentPlay();
+    updateBarDrinks(delta);
 
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;

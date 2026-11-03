@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { COLORS, collider } from './badmintonDecor.js';
+import { drawAttract, drawMatch, isMatchOn, stepMatch } from './shuttleRally.js';
 
 // Stand-up arcade cabinet on the front wall, right of the mini bar.
 // An original "Shuttle Rally" machine in Court Connect colours: lit marquee, a tilted screen running
 // a pixel-art badminton rally in attract mode, two joysticks with six buttons, and painted side art.
 // Modelled in meters (front facing +z, back against the wall at z = 0), then scaled into scene units;
-// built from simple shapes and canvas textures, so there's nothing to download.
+// built from simple shapes and canvas textures, so there's nothing to download. The game on the screen
+// is shuttleRally.js; arcadePlay.js lets the visitor step up and play it.
 
 const PLACE = { x: 10, z: -20 }; // the front wall stands at z = -20
 const CABINET = { width: 0.72, depth: 0.85, height: 1.85, side: 0.022 };
@@ -26,7 +28,16 @@ const PROFILE = [
 const SCREEN = { top: [0.48, 1.56], bottom: [0.62, 1.06] };
 const MARQUEE = { top: [0.56, 1.85], bottom: [0.6, 1.62] };
 const PANEL = { back: [0.62, 1.06], front: [0.86, 1.0] };
-const GAME = { width: 160, height: 120, fps: 20 }; // the pixel game's resolution and frame rate
+const GAME = { width: 160, height: 120, fps: 20, playFps: 30 }; // the pixel game's resolution and frame rates
+
+// Where the screen is in the room, for arcadePlay.js to bring the camera up to it (filled in by createArcade)
+export const arcadeScreen = {
+  center: new THREE.Vector3(),
+  normal: new THREE.Vector3(), // out of the glass, toward the player
+  up: new THREE.Vector3(), // the screen's own up, leaning back with it
+  width: 0,
+  height: 0,
+};
 
 const canvasTexture = (width, height, draw) => {
   const canvas = document.createElement('canvas');
@@ -98,92 +109,7 @@ const drawMarquee = (ctx, width, height) => {
   ctx.fillText('COURT CONNECT ARCADE · 1 OR 2 PLAYERS', width / 2, height * 0.82);
 };
 
-// The attract-mode game: two pixel players keep a rally going over the net
-let game;
-const drawGame = (time) => {
-  const { ctx, texture } = game;
-  const W = GAME.width;
-  const H = GAME.height;
-  ctx.fillStyle = '#071821';
-  ctx.fillRect(0, 0, W, H);
-
-  // Court in perspective along the bottom, net in the middle
-  ctx.fillStyle = '#0b5d4b';
-  ctx.beginPath();
-  ctx.moveTo(18, 70);
-  ctx.lineTo(W - 18, 70);
-  ctx.lineTo(W - 2, 108);
-  ctx.lineTo(2, 108);
-  ctx.fill();
-  ctx.fillStyle = '#f6f4ef';
-  ctx.fillRect(10, 106, W - 20, 1);
-  ctx.fillRect(22, 72, W - 44, 1);
-  ctx.fillRect(W / 2, 46, 1, 44); // net post
-  for (let y = 48; y < 64; y += 2) ctx.fillRect(W / 2 - 1, y, 3, 1); // net mesh
-
-  // The shuttle flies a high arc from one player to the other every 1.2 s
-  const RALLY = 1.2;
-  const shot = Math.floor(time / RALLY);
-  const t = (time % RALLY) / RALLY;
-  const fromLeft = shot % 2 === 0;
-  const startX = 34;
-  const endX = W - 34;
-  const x = fromLeft ? startX + (endX - startX) * t : endX - (endX - startX) * t;
-  const y = 74 - Math.sin(Math.PI * t) * 50;
-  const players = [
-    { x: 30, color: '#d0eb00', swing: fromLeft ? 1 - t : t },
-    { x: W - 30, color: '#ff6b5b', swing: fromLeft ? t : 1 - t },
-  ];
-  players.forEach(({ x: px, color, swing }, i) => {
-    const step = Math.round(Math.sin(time * 6 + i) * 1.5); // a little footwork
-    ctx.fillStyle = '#f2c79b';
-    ctx.fillRect(px - 2 + step, 66, 5, 5); // head
-    ctx.fillStyle = color;
-    ctx.fillRect(px - 3 + step, 71, 7, 9); // shirt
-    ctx.fillStyle = '#1b2a3a';
-    ctx.fillRect(px - 3 + step, 80, 3, 8); // legs
-    ctx.fillRect(px + 1 + step, 80, 3, 8);
-    // Racket raised as the shuttle comes in
-    const side = i === 0 ? 1 : -1;
-    const reach = swing > 0.8 ? 10 : 6;
-    ctx.fillStyle = '#f6f4ef';
-    ctx.fillRect(px + side * 4 + step, 70 - reach, 1, reach);
-    ctx.strokeStyle = '#f6f4ef';
-    ctx.strokeRect(px + side * 4 + step - 2.5, 64 - reach, 5, 6);
-  });
-  // Shuttle with a short trail
-  [0.06, 0.03].forEach((back, i) => {
-    const tt = Math.max(0, t - back);
-    const tx = fromLeft ? startX + (endX - startX) * tt : endX - (endX - startX) * tt;
-    ctx.fillStyle = i === 0 ? 'rgba(246,244,239,0.3)' : 'rgba(246,244,239,0.6)';
-    ctx.fillRect(Math.round(tx), Math.round(74 - Math.sin(Math.PI * tt) * 50), 2, 2);
-  });
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(Math.round(x), Math.round(y), 3, 3);
-
-  // Scores and title, a point every few rallies
-  ctx.font = '8px monospace';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = '#d0eb00';
-  ctx.textAlign = 'left';
-  ctx.fillText(`1P ${String(7 + (Math.floor(time / 7) % 14)).padStart(2, '0')}`, 4, 3);
-  ctx.fillStyle = '#ff6b5b';
-  ctx.textAlign = 'right';
-  ctx.fillText(`2P ${String(5 + (Math.floor(time / 9) % 16)).padStart(2, '0')}`, W - 4, 3);
-  ctx.fillStyle = '#f6f4ef';
-  ctx.textAlign = 'center';
-  ctx.fillText('HI 21', W / 2, 3);
-  ctx.fillStyle = '#7fe0ff';
-  ctx.fillText('SHUTTLE RALLY', W / 2, 16);
-  if (Math.floor(time * 1.5) % 2 === 0) {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText('INSERT COIN', W / 2, H - 11);
-  }
-  // Scanlines, like a CRT
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
-  for (let row = 0; row < H; row += 2) ctx.fillRect(0, row, W, 1);
-  texture.needsUpdate = true;
-};
+let game; // the screen's canvas, its texture and mesh, and the game clock
 
 // A flat panel stretched between two [z, y] points of the side profile, `inset` meters in from the sides
 const slopedPanel = (top, bottom, material, inset = 0) => {
@@ -282,13 +208,14 @@ const createCabinet = () => {
   texture.magFilter = THREE.NearestFilter; // keep the pixels crisp
   texture.minFilter = THREE.LinearFilter;
   game = { ctx: canvas.getContext('2d'), texture, elapsed: 0, time: 0 };
-  drawGame(0);
+  drawAttract(game.ctx, 0);
   const screen = slopedPanel(SCREEN.top, SCREEN.bottom, new THREE.MeshBasicMaterial({ map: texture }), 0.07);
   screen.scale.y = 0.84; // 4:3 picture inside the bezel
   screen.position.addScaledVector(new THREE.Vector3(0, -Math.sin(screen.rotation.x), Math.cos(screen.rotation.x)), 0.004); // just off the bezel
 
   cabinet.add(marquee, bezel, screen, createControls());
   cabinet.scale.setScalar(UNITS_PER_METER);
+  game.screen = screen;
   return cabinet;
 };
 
@@ -300,16 +227,32 @@ export const createArcade = (scene) => {
   const glow = new THREE.PointLight(0x7fd8ff, 0.6, 6, 2);
   glow.position.set(PLACE.x, FLOOR_Y + 1.4 * UNITS_PER_METER, PLACE.z + 1.2 * UNITS_PER_METER);
   scene.add(cabinet, glow);
+
+  cabinet.updateMatrixWorld(true);
+  const { screen } = game;
+  const facing = screen.getWorldQuaternion(new THREE.Quaternion());
+  screen.getWorldPosition(arcadeScreen.center);
+  arcadeScreen.normal.set(0, 0, 1).applyQuaternion(facing);
+  arcadeScreen.up.set(0, 1, 0).applyQuaternion(facing);
+  arcadeScreen.width = screen.geometry.parameters.width * UNITS_PER_METER;
+  arcadeScreen.height = screen.geometry.parameters.height * screen.scale.y * UNITS_PER_METER;
+
   const depth = CABINET.depth * UNITS_PER_METER;
   return [collider(PLACE.x, PLACE.z + depth / 2, CABINET.width * UNITS_PER_METER + 0.3, depth + 0.3)];
 };
 
-// Called every frame from the render loop; redraws the game at its own frame rate
+// Called every frame from the render loop; plays the match (or attract mode) and redraws the screen
+// at the game's own frame rate
 export const updateArcade = (delta) => {
   if (!game) return;
-  game.time += Math.min(delta, 0.1);
+  const step = Math.min(delta, 0.1);
+  game.time += step;
+  const playing = isMatchOn();
+  if (playing) stepMatch(step);
   game.elapsed += delta;
-  if (game.elapsed < 1 / GAME.fps) return;
+  if (game.elapsed < 1 / (playing ? GAME.playFps : GAME.fps)) return;
   game.elapsed = 0;
-  drawGame(game.time);
+  if (playing) drawMatch(game.ctx);
+  else drawAttract(game.ctx, game.time);
+  game.texture.needsUpdate = true;
 };

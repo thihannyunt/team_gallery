@@ -29,13 +29,20 @@ const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const offset = new THREE.Vector3();
 const focus = new THREE.Vector3();
 let seatedYaw = null; // while sitting, the body stays facing the seat's way even as the player looks around
+let firstPersonOnly = false; // at the arcade, the view goes up to the screen whatever the setting
 
 // The camera to render and aim clicks with
-export const getViewCamera = () => (thirdPerson ? viewCamera : playerCamera);
+export const getViewCamera = () => (thirdPerson && !firstPersonOnly ? viewCamera : playerCamera);
+
+// See through the player's own eyes for a while (arcadePlay.js), without changing their choice
+export const forceFirstPerson = (on) => {
+  firstPersonOnly = on;
+  character.object.visible = thirdPerson && !on;
+};
 
 const setThirdPerson = (on) => {
   thirdPerson = on;
-  character.object.visible = on;
+  character.object.visible = on && !firstPersonOnly;
   document.getElementById('touch-view-button').innerText = on ? '👁 1st person' : '👁 3rd person';
 };
 
@@ -82,7 +89,7 @@ export const setSeated = (bodyYaw) => {
 
 // Called every frame from the render loop
 export const updatePlayerView = (delta) => {
-  if (!thirdPerson) return;
+  if (!thirdPerson || firstPersonOnly) return;
 
   // Same lens as the player camera, which changes it on resize (see fitCameraToScreen in scene.js)
   if (viewCamera.fov !== playerCamera.fov || viewCamera.aspect !== playerCamera.aspect) {

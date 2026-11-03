@@ -575,7 +575,9 @@ body.exploring #landing-title {
    front of a photo (modules/photoPrompt.js) */
 
 #seat-button,
-#photo-button {
+#photo-button,
+#arcade-button,
+#instrument-button {
   position: fixed;
   left: 50%;
   bottom: calc(28px + env(safe-area-inset-bottom));
@@ -594,12 +596,632 @@ body.exploring #landing-title {
 }
 
 #seat-button[hidden],
-#photo-button[hidden] {
+#photo-button[hidden],
+#arcade-button[hidden],
+#instrument-button[hidden] {
   display: none;
 }
 
-#photo-button {
+#photo-button,
+#arcade-button,
+#instrument-button {
   animation: photo-button-in 0.25s ease-out;
+}
+
+/* Playing Shuttle Rally (modules/arcadePlay.js): the cabinet's screen fills the view and the pad covers
+   the page, so a drag can't turn the view. The gallery's own buttons step aside meanwhile. */
+#arcade-pad {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1; /* under the music buttons */
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+body.at-arcade #arcade-pad {
+  display: block;
+}
+
+body.at-arcade #seat-button,
+body.at-arcade #photo-button,
+body.at-arcade #bar-actions,
+body.at-arcade #info-panel,
+body.touch-mode.exploring.at-arcade #rotate-toast.show,
+body.touch-mode.exploring.at-arcade #touch-ui {
+  display: none;
+}
+
+#arcade-pad button {
+  border: 2px solid var(--cc-lime);
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-weight: 800;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  touch-action: none;
+}
+
+#arcade-exit {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+/* Touch: run buttons under the left thumb, SWING under the right, like a handheld */
+.arcade-moves,
+#arcade-pad #arcade-swing {
+  display: none;
+}
+
+body.touch-mode .arcade-moves {
+  display: flex;
+  gap: 14px;
+  position: absolute;
+  left: calc(24px + env(safe-area-inset-left));
+  bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+.arcade-moves button {
+  width: clamp(64px, 16vmin, 96px);
+  height: clamp(64px, 16vmin, 96px);
+  border-radius: 50%;
+  font-size: clamp(22px, 5vmin, 32px);
+}
+
+body.touch-mode #arcade-pad #arcade-swing {
+  display: block;
+  position: absolute;
+  right: calc(24px + env(safe-area-inset-right));
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  width: clamp(84px, 21vmin, 124px);
+  height: clamp(84px, 21vmin, 124px);
+  border-radius: 50%;
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+  font-size: clamp(15px, 3.6vmin, 20px);
+  letter-spacing: 0.04em;
+}
+
+.arcade-moves button:active,
+#arcade-pad #arcade-swing:active {
+  transform: scale(0.94);
+}
+
+.arcade-keys {
+  position: absolute;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body.touch-mode .arcade-keys {
+  display: none;
+}
+
+/* At the Rally Bar (modules/barDrinks.js): "Drinks menu" and "Take a sip" stacked in the bottom right,
+   where games keep their action buttons, so the glass in the middle of the view stays clear */
+#bar-actions {
+  position: fixed;
+  right: calc(20px + env(safe-area-inset-right));
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  z-index: 5;
+  display: flex;
+  flex-direction: column-reverse; /* "Take a sip" on top, nearest the thumb's reach up */
+  align-items: stretch;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+#bar-actions[hidden],
+#bar-actions button[hidden] {
+  display: none;
+}
+
+#bar-actions button {
+  padding: 11px 18px;
+  border-radius: 999px;
+  border: 2px solid var(--cc-lime);
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+#bar-actions #sip-button {
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+#bar-actions button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* The bar's menu card */
+#bar-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 2000; /* above lil-gui and the touch controls, like the photo viewer */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background-color: rgba(13, 17, 17, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s;
+}
+
+#bar-menu.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.bar-menu-card {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 22px 20px 16px;
+  box-sizing: border-box;
+  border-radius: 18px;
+  border: 1px solid rgba(208, 235, 0, 0.35);
+  background-color: #013635;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  text-align: center;
+}
+
+#bar-menu h2 {
+  margin: 0;
+  font-family: Caveat, "Comic Sans MS", cursive;
+  font-size: 44px;
+  font-weight: 700;
+  color: #efffa0;
+  text-shadow: 0 0 6px rgba(208, 235, 0, 0.9), 0 0 20px rgba(208, 235, 0, 0.6); /* like the neon sign */
+}
+
+.bar-menu-sub,
+.bar-menu-foot {
+  margin: 2px 0 14px;
+  font-size: 13px;
+  color: var(--cc-cream-muted);
+}
+
+.bar-menu-foot {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+#bar-menu-list {
+  display: grid;
+  gap: 8px;
+}
+
+.bar-drink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(246, 244, 239, 0.14);
+  background-color: rgba(246, 244, 239, 0.05);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.bar-drink:hover,
+.bar-drink:focus-visible {
+  background-color: rgba(208, 235, 0, 0.12);
+  border-color: var(--cc-lime);
+  outline: none;
+}
+
+.bar-drink-swatch {
+  flex: none;
+  width: 18px;
+  height: 30px;
+  border-radius: 3px 3px 6px 6px; /* a little glass of the drink's colour */
+  background: linear-gradient(to top, var(--drink) 78%, rgba(246, 244, 239, 0.35) 78%);
+  box-shadow: inset 0 0 0 1px rgba(246, 244, 239, 0.4);
+}
+
+.bar-drink-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bar-drink b {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.bar-drink small {
+  font-size: 12px;
+  color: var(--cc-cream-muted);
+}
+
+.bar-drink .key-hint {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--cc-lime);
+}
+
+/* Phones held sideways: two columns so the whole menu fits the short screen */
+@media (max-height: 500px) {
+  .bar-menu-card {
+    width: min(640px, 100%);
+    padding: 12px 16px 10px;
+  }
+
+  #bar-menu h2 {
+    font-size: 34px;
+  }
+
+  .bar-menu-sub {
+    margin-bottom: 8px;
+  }
+
+  #bar-menu-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .bar-drink {
+    padding: 7px 10px;
+  }
+
+  .bar-menu-foot {
+    margin-top: 8px;
+  }
+}
+
+#close-bar-menu {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--cc-cream-faint);
+  background: none;
+  color: var(--cc-cream);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Playing the khlui or the guitar (modules/instrumentPlay.js): a card over the gallery, like the bar menu */
+#instrument-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+  box-sizing: border-box;
+  background-color: rgba(13, 17, 17, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#instrument-dialog.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.instrument-card {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 18px 18px 16px;
+  box-sizing: border-box;
+  border-radius: 18px;
+  border: 1px solid rgba(208, 235, 0, 0.35);
+  background-color: #013635;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  text-align: center;
+}
+
+#khlui-panel,
+#guitar-panel {
+  display: none;
+}
+
+#instrument-dialog[data-instrument="khlui"] #khlui-panel,
+#instrument-dialog[data-instrument="guitar"] #guitar-panel {
+  display: block;
+}
+
+.instrument-card h2 {
+  margin: 0;
+  font-family: "Caveat", cursive;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--cc-lime);
+}
+
+.instrument-sub {
+  margin: 4px 0 14px;
+  color: var(--cc-cream-muted);
+  font-size: 13px;
+}
+
+#close-instrument {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--cc-cream-faint);
+  background: none;
+  color: var(--cc-cream);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.instrument-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.instrument-row button,
+.guitar-chord {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--cc-lime);
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.instrument-row button[aria-pressed="true"],
+.guitar-chord[aria-pressed="true"] {
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+/* The khlui itself: a length of fire-mottled bamboo, plugged blowing end on the left, holes along it */
+#khlui-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 10px 14px 10px 64px;
+  border-radius: 10px 999px 999px 10px;
+  background:
+    radial-gradient(ellipse 9% 30% at 22% 30%, rgba(58, 34, 14, 0.55), transparent),
+    radial-gradient(ellipse 7% 25% at 61% 70%, rgba(58, 34, 14, 0.5), transparent),
+    radial-gradient(ellipse 6% 22% at 84% 35%, rgba(58, 34, 14, 0.45), transparent),
+    linear-gradient(90deg, #e3c48f 0 34px, #6e4422 34px 38px, transparent 38px),
+    linear-gradient(180deg, #a87a40, #dcb072 35%, #c99a5a 65%, #8f6432);
+  box-shadow: inset 0 -6px 12px rgba(0, 0, 0, 0.25), 0 8px 20px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+}
+
+/* The window, the sharp-edged notch just after the plug */
+#khlui-body::before {
+  content: "";
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  width: 12px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 3px;
+  background-color: #1a0f07;
+}
+
+.khlui-hole {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: #2b1a0c;
+  font-family: var(--cc-font);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.khlui-dot {
+  width: clamp(26px, 6vmin, 38px);
+  height: clamp(26px, 6vmin, 38px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #050302 55%, #3a2412 100%);
+  box-shadow: 0 1px 0 rgba(255, 240, 210, 0.6);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.khlui-hole.active .khlui-dot {
+  transform: scale(0.9);
+  box-shadow: 0 0 0 4px var(--cc-lime), 0 0 18px var(--cc-lime);
+}
+
+.khlui-hole b {
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.khlui-hole small {
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.khlui-hole .key-hint {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.6;
+}
+
+/* The guitar: chord chips over a rosewood neck with six strings, low E at the top as you look down */
+#guitar-chords {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.guitar-chord {
+  padding: 8px 0;
+  font-size: 16px;
+}
+
+.guitar-chord .key-hint {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+#guitar-strings {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: clamp(150px, 34vh, 230px);
+  margin-top: 12px;
+  padding-left: 24px; /* a margin for the string names */
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, #1c110a 0 24px, transparent 24px),
+    radial-gradient(circle at 50% 50%, #e8e0cc 0 5px, transparent 6px) 24px 0 / calc((100% - 24px) / 4) 100% repeat-x,
+    repeating-linear-gradient(90deg, transparent 0 calc(25% - 3px), #c9c4b8 calc(25% - 3px) 25%),
+    linear-gradient(180deg, #2c1a10, #3d2416 50%, #2c1a10);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+  touch-action: none;
+  cursor: pointer;
+}
+
+.guitar-string {
+  position: relative;
+  height: var(--thickness);
+  background: linear-gradient(180deg, #fff8e6, #b9a884);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.guitar-string::before {
+  content: attr(data-name);
+  position: absolute;
+  left: -17px;
+  top: calc(var(--thickness) / 2 - 7px);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--cc-cream-muted);
+}
+
+.guitar-string.muted {
+  opacity: 0.35;
+}
+
+.guitar-string.ring {
+  animation: string-ring 0.6s ease-out;
+}
+
+@keyframes string-ring {
+  0%, 100% { transform: none; }
+  10%, 30%, 50%, 70% { transform: translateY(-1.5px) scaleY(1.6); }
+  20%, 40%, 60%, 80% { transform: translateY(1.5px) scaleY(1.6); }
+}
+
+/* Short screens (phones held sideways): tighter, so the whole card fits */
+@media (max-height: 500px) {
+  .instrument-card {
+    padding: 10px 14px 10px;
+  }
+
+  .instrument-card h2 {
+    font-size: 30px;
+  }
+
+  .instrument-sub {
+    margin-bottom: 8px;
+  }
+
+  .instrument-row {
+    margin-top: 8px;
+  }
+
+  #guitar-strings {
+    height: 38vh;
+  }
+
+  .guitar-chord {
+    padding: 5px 0;
+  }
+}
+
+/* Upright phones: two rows of chords, and the khlui's labels a little smaller */
+@media (max-width: 520px) {
+  #guitar-chords {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  #khlui-body {
+    padding-left: 48px;
+    padding-right: 8px;
+    background-size: auto;
+  }
+
+  #khlui-body::before {
+    left: 36px;
+    width: 8px;
+  }
+
+  .khlui-hole b {
+    font-size: 12px;
+  }
+
+  .khlui-hole small {
+    font-size: 10px;
+  }
 }
 
 @keyframes photo-button-in {
@@ -863,7 +1485,19 @@ body.touch-mode .key-hint {
   margin-right: 6px;
 }
 
-/* Hidden where the browser can't go full screen, e.g. Safari on iPhone (modules/fullscreen.js) */
+/* Drawn rather than the ⛶ character, which iPhone fonts don't have */
+.fullscreen-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.12em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Hidden once the gallery already fills the screen, opened from the home screen (modules/fullscreen.js) */
 #audio_controls #fullscreen_toggle[hidden] {
   display: none;
 }
@@ -943,8 +1577,19 @@ body.touch-mode button {
 
   /* Above the centred joystick */
   body.touch-mode #seat-button,
-  body.touch-mode #photo-button {
+  body.touch-mode #photo-button,
+  body.touch-mode #arcade-button,
+  body.touch-mode #instrument-button {
     bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
+  }
+
+  /* Upright phones: the joystick takes the bottom middle, so the two sit side by side above "Stand up" */
+  body.touch-mode #bar-actions {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    bottom: calc(clamp(120px, 24vmin, 200px) + 48px + 56px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1213,7 +1858,17 @@ body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
   }
 }
 
-#rotate-toast {
+/* iPhones can't take a page full screen, so the full-screen button shows how to get there instead */
+#fullscreen-tip {
+  display: none;
+}
+
+#fullscreen-tip.show {
+  display: flex;
+}
+
+#rotate-toast,
+#fullscreen-tip {
   position: fixed;
   top: calc(56px + env(safe-area-inset-top));
   left: 50%;
@@ -1233,7 +1888,14 @@ body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
   box-sizing: border-box;
 }
 
-#close-rotate-toast {
+#fullscreen-tip {
+  max-width: min(420px, calc(100vw - 32px));
+  border-radius: 16px; /* two or three lines, too tall for a pill */
+  line-height: 1.4;
+}
+
+#close-rotate-toast,
+#close-fullscreen-tip {
   flex: none;
   width: 28px;
   height: 28px;

@@ -15,6 +15,12 @@ const SHELVES = [1.22, 1.58];
 const COUNTER = { width: 2.2, height: 1.05, depth: 0.56, z: 1.5, overhang: 0.22 };
 const STOOLS = { z: 2.25, xs: [-0.7, 0, 0.7], seat: 0.76 };
 const PENDANT_DROP = 2.05; // shade bottom above the floor
+const STOOL_EYE = 1.54; // a seated visitor's eyes on a stool, meters above the floor
+
+// The stools, as seats for seating.js, filled in by createMiniBar. Like the lounge seats (lounge.js)
+// they have a `position` on the floor and the `facing` the sitter looks along, plus where to look,
+// eye height, which way to step off, and where their drink stands on the counter (barDrinks.js).
+export const barSeats = [];
 
 const walnut = new THREE.MeshStandardMaterial({ color: 0x5a3b24, roughness: 0.55 });
 const stone = new THREE.MeshStandardMaterial({ color: 0x1c2121, roughness: 0.25, metalness: 0.1 });
@@ -266,6 +272,18 @@ export const createMiniBar = (scene) => {
   scene.add(bar, light);
 
   const depthOf = (meters) => PLACE.z + meters * U; // meters out from the wall to world z
+  STOOLS.xs.forEach((x) => {
+    const worldX = PLACE.x + x * U;
+    barSeats.push({
+      kind: 'bar',
+      position: new THREE.Vector3(worldX, FLOOR_Y, depthOf(STOOLS.z)),
+      facing: Math.PI, // toward the bar (-z)
+      standFacing: 0, // step back off the stool, away from the counter
+      eyeY: FLOOR_Y + STOOL_EYE * U,
+      lookAt: new THREE.Vector3(worldX, FLOOR_Y + 1.0 * U, depthOf(0.4)), // the counter, shelves above
+      glassSpot: new THREE.Vector3(worldX, FLOOR_Y + COUNTER.height * U, depthOf(COUNTER.z - 0.05)),
+    });
+  });
   return [
     collider(PLACE.x, depthOf(BACK_BAR.depth / 2), BACK_BAR.width * U, BACK_BAR.depth * U + 0.2),
     collider(PLACE.x, depthOf(COUNTER.z + COUNTER.overhang / 2), COUNTER.width * U + 0.3, (COUNTER.depth + COUNTER.overhang) * U + 0.3),

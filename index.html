@@ -119,17 +119,21 @@
           <p><b>G:</b> Play music</p>
           <p><b>P:</b> Stop music</p>
           <p><b>V:</b> Switch 1st / 3rd person</p>
-          <p><b>E:</b> View photo / sit down</p>
+          <p><b>E:</b> View photo / sit down / play arcade or an instrument</p>
+          <p><b>B / Q:</b> Drinks menu / sip (at the bar)</p>
           <p><b>F:</b> Full screen</p>
         </div>
         <div class="touch-help">
           <p><b>Joystick:</b> Move around</p>
           <p><b>Drag:</b> Look around</p>
           <p><b>Tap painting:</b> View photo</p>
+          <p><b>🪑 at the bar:</b> Order a drink</p>
+          <p><b>🕹️ at the arcade:</b> Play Shuttle Rally</p>
+          <p><b>🎵 / 🎸:</b> Play the khlui or the guitar</p>
           <p><b>☰ Menu:</b> Show Menu</p>
           <p><b>👁:</b> Switch 1st / 3rd person</p>
           <p><b>🔊:</b> Music on / off</p>
-          <p><b>⛶:</b> Full screen</p>
+          <p><b>Corners button:</b> Full screen</p>
         </div>
       </div>
     </div>
@@ -141,9 +145,12 @@
         <span class="music-icon" aria-hidden="true">🔇</span>
         <span class="button-label">Play Music</span>
       </button>
-      <!-- Shown only where the browser can go full screen (modules/fullscreen.js) -->
+      <!-- Full screen, or on iPhone a tip for opening the gallery full screen from the home screen
+           (modules/fullscreen.js); hidden once it's already running from there -->
       <button id="fullscreen_toggle" aria-label="Full screen" aria-pressed="false" hidden>
-        <span class="music-icon" aria-hidden="true">⛶</span>
+        <svg class="music-icon fullscreen-icon" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M1.5 5.5v-4h4M10.5 1.5h4v4M14.5 10.5v4h-4M5.5 14.5h-4v-4" />
+        </svg>
         <span class="button-label">Full Screen</span>
       </button>
       <button id="help_button" aria-label="Show controls" aria-expanded="false">!</button>
@@ -173,6 +180,12 @@
       </div>
     </div>
 
+    <div id="fullscreen-tip" role="status">
+      <span>For full screen on iPhone, tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then
+        <b>Add to Home Screen</b>, and open the gallery from that icon</span>
+      <button id="close-fullscreen-tip" aria-label="Dismiss">X</button>
+    </div>
+
     <div id="rotate-toast" role="status">
       <span>📱 Turn your phone sideways for a better view</span>
       <button id="close-rotate-toast" aria-label="Dismiss">X</button>
@@ -180,8 +193,63 @@
 
     <button id="seat-button" hidden></button>
 
+    <!-- Sitting at the Rally Bar (modules/barDrinks.js) -->
+    <div id="bar-actions" hidden>
+      <button id="bar-menu-button">📋 Drinks menu<span class="key-hint"> · B</span></button>
+      <button id="sip-button" hidden>🥤 Take a sip<span class="key-hint"> · Q</span></button>
+    </div>
+    <div id="bar-menu" role="dialog" aria-modal="true" aria-labelledby="bar-menu-title">
+      <div class="bar-menu-card">
+        <button id="close-bar-menu" aria-label="Close menu">X</button>
+        <h2 id="bar-menu-title">Rally Bar</h2>
+        <p class="bar-menu-sub">Pick a drink and we'll pour it for you</p>
+        <div id="bar-menu-list"></div>
+        <p class="bar-menu-foot">All drinks are alcohol-free and on the house</p>
+      </div>
+    </div>
+
     <!-- Near a photo and looking at it (modules/photoPrompt.js) -->
     <button id="photo-button" hidden>🔍 View photo<span class="key-hint"> · E</span></button>
+
+    <!-- The music corner's khlui and guitar (modules/instrumentPlay.js, khluiSim.js, guitarSim.js) -->
+    <button id="instrument-button" hidden>🎵 Play<span class="key-hint"> · E</span></button>
+    <div id="instrument-dialog" role="dialog" aria-modal="true" aria-label="Play an instrument">
+      <div class="instrument-card">
+        <button id="close-instrument" aria-label="Close">X</button>
+        <section id="khlui-panel">
+          <h2>Khlui <span lang="th">ขลุ่ย</span></h2>
+          <p class="instrument-sub">Thai bamboo flute · hold a hole to play, slide along to glide</p>
+          <div id="khlui-body"></div>
+          <div class="instrument-row">
+            <button id="khlui-high" aria-pressed="false">💨 Blow harder<span class="key-hint"> · Shift</span></button>
+            <button id="khlui-sample">▶ Hear a phrase</button>
+          </div>
+        </section>
+        <section id="guitar-panel">
+          <h2>Electric Guitar</h2>
+          <p class="instrument-sub">Pick a chord, then swipe across the strings to strum</p>
+          <div id="guitar-chords"></div>
+          <div id="guitar-strings"></div>
+          <div class="instrument-row">
+            <button id="guitar-down">⬇ Strum<span class="key-hint"> · Space</span></button>
+            <button id="guitar-up">⬆ Strum<span class="key-hint"> · ↑</span></button>
+            <button id="guitar-drive" aria-pressed="false">🔥 Overdrive off<span class="key-hint"> · O</span></button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- At the arcade cabinet (modules/arcadePlay.js); the pad only shows while playing -->
+    <button id="arcade-button" hidden>🕹️ Play Shuttle Rally<span class="key-hint"> · E</span></button>
+    <div id="arcade-pad">
+      <button id="arcade-exit">✕ Step back<span class="key-hint"> · Esc</span></button>
+      <div class="arcade-moves">
+        <button id="arcade-left" aria-label="Move left">◀</button>
+        <button id="arcade-right" aria-label="Move right">▶</button>
+      </div>
+      <button id="arcade-swing">SWING</button>
+      <p class="arcade-keys">← → move · Space swing · Esc step back</p>
+    </div>
 
     <div id="touch-ui">
       <div id="touch-top-bar">

@@ -5,7 +5,8 @@ import { COLORS, collider } from './badmintonDecor.js';
 // Music corner in the middle of the back wall, between the exit door and the "Behind the Scenes"
 // photos: an electric guitar on
 // a wall hanger, its cable plugged into a small combo amp on the floor, and a wall showcase holding a
-// silver flute. Modelled in meters (front facing +z, back against the wall at z = 0), then scaled into
+// Thai khlui (bamboo flute). Both can be played (instrumentPlay.js). Modelled in meters (front facing +z,
+// back against the wall at z = 0), then scaled into
 // scene units; built from simple shapes so there's nothing to download.
 
 const U = UNITS_PER_METER;
@@ -14,7 +15,13 @@ const GUITAR = { x: -2.8, hangerHeight: 1.78 }; // hanger height in meters above
 const AMP = { offset: -0.12, width: 0.46, height: 0.42, depth: 0.25 }; // offset along the wall from the guitar
 const SHOWCASE = { x: 2.0, width: 0.86, height: 0.28, depth: 0.11, scale: 1.45 }; // hung larger than life, like the photos
 
-// For lighting.js: a ceiling track light on the guitar and one on the flute, like the photos get
+// Where the two instruments are, for instrumentPlay.js to offer them to a visitor who walks up
+export const instrumentSpots = {
+  guitar: new THREE.Vector3(GUITAR.x, FLOOR_Y + (GUITAR.hangerHeight - 0.5) * UNITS_PER_METER, WALL_Z),
+  khlui: new THREE.Vector3(SHOWCASE.x, CENTERLINE_Y, WALL_Z),
+};
+
+// For lighting.js: a ceiling track light on the guitar and one on the khlui, like the photos get
 const guitarCenterY = FLOOR_Y + (GUITAR.hangerHeight - 0.5) * U;
 export const musicCornerLights = [
   { center: new THREE.Vector3(GUITAR.x, guitarCenterY, WALL_Z - 0.2), width: 0.45 * U, height: 1.0 * U },
@@ -254,42 +261,94 @@ const createGuitarWall = () => {
   return group;
 };
 
-// Flute showcase
+// Khlui showcase
 
-const createFlute = () => {
-  const flute = new THREE.Group(); // lies along x, centred, keys facing +z
-  const silver = new THREE.MeshStandardMaterial({ color: 0xe6e8ea, roughness: 0.15, metalness: 1 });
-  const length = 0.66;
-  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.0095, 0.0095, length, 20), silver);
+// Fire-mottled bamboo, the dark patterns Thai makers burn into a khlui, drawn once (seeded, so every
+// visit and the intro video look the same). The cylinder wraps u around the tube, v along its length.
+const bambooTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  let seed = 7;
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const grain = ctx.createLinearGradient(0, 0, 256, 0);
+  grain.addColorStop(0, '#b98a4c');
+  grain.addColorStop(0.5, '#d9ae6c');
+  grain.addColorStop(1, '#b98a4c');
+  ctx.fillStyle = grain;
+  ctx.fillRect(0, 0, 256, 512);
+  for (let i = 0; i < 70; i++) {
+    ctx.fillStyle = `rgba(${50 + random() * 30}, ${28 + random() * 14}, 12, ${0.45 + random() * 0.45})`;
+    ctx.beginPath();
+    ctx.ellipse(random() * 256, random() * 512, 6 + random() * 22, 3 + random() * 9, random() * Math.PI, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(90, 55, 25, 0.25)'; // fibres along the cane
+  for (let i = 0; i < 40; i++) {
+    const y = random() * 512;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(256, y + random() * 4 - 2);
+    ctx.stroke();
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 4;
+  return texture;
+};
+
+// A Thai khlui (ขลุ่ย): a bamboo fipple flute with a wooden plug in the blowing end, the sharp-edged
+// window just below it, a membrane hole on top, seven finger holes and two pairs of tuning holes at the foot.
+const createKhlui = () => {
+  const khlui = new THREE.Group(); // lies along x, blowing end at -x, finger holes facing +z
+  const length = 0.47;
+  const radius = 0.014;
+  const bamboo = new THREE.MeshStandardMaterial({ map: bambooTexture(), roughness: 0.45 });
+  const plug = new THREE.MeshStandardMaterial({ color: 0xe3c48f, roughness: 0.7 });
+  const hole = new THREE.MeshBasicMaterial({ color: 0x120b06 });
+  // Caps: the top one ends up at -x after the turn, the plugged blowing end
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius * 0.96, length, 28), [bamboo, plug, bamboo]);
   tube.rotation.z = Math.PI / 2;
-  flute.add(tube);
-  // Joint rings, crown and lip plate on the head joint
-  [-0.13, 0.19].forEach((x) => {
-    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.0115, 0.0115, 0.012, 20), silver);
+  khlui.add(tube);
+  khlui.add(box(0.001, 0.003, 0.016, hole, -length / 2 - 0.0005, radius * 0.62, 0)); // the slit over the plug
+
+  // Bamboo nodes, a little proud of the tube
+  const node = new THREE.MeshStandardMaterial({ color: 0x6e4422, roughness: 0.5 });
+  [-0.14, 0.19].forEach((x) => {
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(radius * 1.06, radius * 1.06, 0.006, 28), node);
     ring.rotation.z = Math.PI / 2;
     ring.position.x = x;
-    flute.add(ring);
+    khlui.add(ring);
   });
-  const crown = new THREE.Mesh(new THREE.SphereGeometry(0.0115, 16, 8), silver);
-  crown.position.x = -length / 2;
-  const lip = box(0.03, 0.022, 0.004, silver, -0.24, 0, 0.011);
-  const embouchure = new THREE.Mesh(new THREE.CircleGeometry(0.004, 12), blackPlastic);
-  embouchure.scale.x = 1.5;
-  embouchure.position.set(-0.24, 0, 0.0135);
-  flute.add(crown, lip, embouchure);
-  // Keys: cups along the body and the foot joint, joined by a rod
-  const cup = new THREE.CylinderGeometry(0.0075, 0.0075, 0.004, 16);
-  for (let i = 0; i < 13; i++) {
-    const key = new THREE.Mesh(cup, silver);
-    key.rotation.x = Math.PI / 2;
-    key.position.set(-0.08 + i * 0.03 + (i > 9 ? 0.012 : 0), 0, 0.0115);
-    flute.add(key);
-  }
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.0018, 0.0018, 0.42, 6), silver);
-  rod.rotation.z = Math.PI / 2;
-  rod.position.set(0.12, -0.009, 0.006);
-  flute.add(rod);
-  return flute;
+
+  // Holes sit just off the round surface, as flat discs
+  const disc = (r, x, angle, material = hole) => {
+    const mesh = new THREE.Mesh(new THREE.CircleGeometry(r, 16), material);
+    mesh.position.set(x, Math.sin(angle) * (radius + 0.0004), Math.cos(angle) * (radius + 0.0004));
+    mesh.rotation.x = -angle;
+    khlui.add(mesh);
+    return mesh;
+  };
+  const lip = disc(0.005, -length / 2 + 0.032, 0); // the window and its sharp lip
+  lip.scale.set(1.5, 0.9, 1);
+  const membrane = disc(0.0045, -length / 2 + 0.085, Math.PI / 2, new THREE.MeshStandardMaterial({ color: 0xf1e6c8, roughness: 0.9 }));
+  membrane.scale.x = 1.4;
+  for (let i = 0; i < 7; i++) disc(0.0042, -0.07 + i * 0.033, 0);
+  [Math.PI / 2, -Math.PI / 2].forEach((angle) => [0.205, 0.218].forEach((x) => disc(0.0022, x, angle)));
+
+  // A red silk cord and tassel, tied on below the blowing end
+  const silk = new THREE.MeshStandardMaterial({ color: 0xb3172a, roughness: 0.8 });
+  const gold = new THREE.MeshStandardMaterial({ color: 0xd4a63a, roughness: 0.3, metalness: 0.8 });
+  const cord = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.08, 0.0018, 8, 24), silk);
+  cord.rotation.y = Math.PI / 2;
+  cord.position.x = -0.175;
+  const bead = new THREE.Mesh(new THREE.SphereGeometry(0.0055, 12, 8), gold);
+  bead.position.set(-0.175, -radius - 0.012, 0.004);
+  const string = box(0.0015, 0.012, 0.0015, silk, -0.175, -radius - 0.005, 0.004);
+  const tassel = new THREE.Mesh(new THREE.ConeGeometry(0.008, 0.045, 12), silk);
+  tassel.position.set(-0.175, -radius - 0.038, 0.004);
+  khlui.add(cord, bead, string, tassel);
+  return khlui;
 };
 
 const createShowcase = () => {
@@ -304,13 +363,14 @@ const createShowcase = () => {
     box(frame, height, depth, walnut, width / 2 - frame / 2, 0, depth / 2),
     box(width, height, 0.01, new THREE.MeshStandardMaterial({ color: 0x013635, roughness: 1 }), 0, 0, 0.005)
   );
-  // Two clear rests and the flute lying on them
+  // Two clear rests and the khlui lying on them
   const acrylic = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.05, transparent: true, opacity: 0.35 });
   [-0.2, 0.2].forEach((x) => showcase.add(box(0.015, 0.05, 0.05, acrylic, x, -0.06, 0.04)));
-  const flute = createFlute();
-  flute.position.set(0, -0.025, 0.05);
-  flute.rotation.z = 0.02;
-  showcase.add(flute);
+  const khlui = createKhlui();
+  khlui.position.set(0, -0.012, 0.05);
+  khlui.rotation.z = 0.02;
+  khlui.scale.setScalar(1.25); // a long khlui (phiang aw) fills the case better than a short one
+  showcase.add(khlui);
   const front = new THREE.Mesh(
     new THREE.PlaneGeometry(width - 2 * frame, height - 2 * frame),
     new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.02, metalness: 0.3, transparent: true, opacity: 0.12, depthWrite: false })
@@ -334,7 +394,7 @@ const createShowcase = () => {
     ctx.fillText('Off the Court', 30, 58);
     ctx.fillStyle = '#6b6b6b';
     ctx.font = '600 26px Manrope, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('SILVER CONCERT FLUTE', 30, 98);
+    ctx.fillText('THAI BAMBOO FLUTE · ขลุ่ย', 30, 98);
     texture.needsUpdate = true;
   };
   draw();

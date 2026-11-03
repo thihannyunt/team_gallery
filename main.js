@@ -29,6 +29,9 @@ import { setupSeating } from "./modules/seating.js";
 import { setupExitDoor } from "./modules/exitDoor.js";
 import { setupFullscreen } from "./modules/fullscreen.js";
 import { setupPhotoPrompt } from "./modules/photoPrompt.js";
+import { setupBarDrinks } from "./modules/barDrinks.js";
+import { setupArcadePlay } from "./modules/arcadePlay.js";
+import { setupInstrumentPlay } from "./modules/instrumentPlay.js";
 import { createArcade } from "./modules/arcade.js";
 import { createMiniBar } from "./modules/miniBar.js";
 import { createMusicCorner, musicCornerLights } from "./modules/musicCorner.js";
@@ -67,6 +70,10 @@ setupAboutPage();
 setupSeating(camera);
 
 setupPhotoPrompt(camera, paintings);
+
+setupBarDrinks(scene, camera, controls);
+setupArcadePlay(camera, controls);
+setupInstrumentPlay(camera, controls);
 
 setupExitDoor(scene, camera, controls);
 
