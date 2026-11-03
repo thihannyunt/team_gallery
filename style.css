@@ -287,45 +287,6 @@ body.exploring #intro-video {
   }
 }
 
-/* Teammate info card */
-
-#painting-info {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: var(--cc-ink-glass);
-  border-left: 4px solid var(--cc-lime);
-  padding: 20px;
-  border-radius: 12px;
-  font-family: var(--cc-font);
-  color: var(--cc-cream);
-  width: 300px;
-  height: 150px;
-  z-index: 1;
-  transition: all 0.3s ease-in-out;
-  transform: translateY(100px);
-  opacity: 0;
-}
-
-#painting-info.show {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-#painting-info h3 {
-  margin: 0 0 10px 0;
-  font-size: 2em;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--cc-lime);
-}
-
-#painting-info p {
-  margin: 0;
-  font-size: 1.2em;
-  color: var(--cc-cream-muted);
-}
-
 /* Controls panel */
 
 #info-panel {
@@ -988,28 +949,6 @@ body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
   color: var(--cc-ink);
 }
 
-/* Painting info sits under the top button row instead of covering the joystick */
-body.touch-mode #painting-info {
-  top: calc(56px + env(safe-area-inset-top));
-  left: calc(10px + env(safe-area-inset-left));
-  width: auto;
-  max-width: min(360px, calc(100vw - 20px));
-  height: auto;
-  max-height: 35vh;
-  overflow: hidden;
-  padding: 12px;
-  box-sizing: border-box;
-}
-
-body.touch-mode #painting-info h3 {
-  font-size: 1.4em;
-  margin-bottom: 6px;
-}
-
-body.touch-mode #painting-info p {
-  font-size: 1em;
-}
-
 /* "Turn your phone sideways" reminder, only for touch screens held upright */
 
 #rotate-toast {
@@ -1106,7 +1045,6 @@ body.touch-mode #painting-info p {
 /* Landing page: only the video and the floating menu buttons, nothing else covering the gallery
    walk-through. Last in the file so it wins over the touch-mode layouts above. */
 body:not(.exploring) #audio_controls,
-body:not(.exploring) #info-panel,
-body:not(.exploring) #painting-info {
+body:not(.exploring) #info-panel {
   display: none;
 }
