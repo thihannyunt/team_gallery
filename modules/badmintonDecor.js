@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER, CENTERLINE_Y } from './paintingData.js';
 
-// Badminton props: a court on the floor in front of the about-us wall, giant rackets in the front
-// corners, crossed rackets on the back wall and a few rackets and shuttles left on court.
+// Badminton props: a court on the floor in front of the about-us wall with its net up and a racket and
+// shuttle set out neatly on each side, giant rackets in the front corners and crossed rackets on the
+// back wall.
 // Everything is modelled in meters at real equipment size, then scaled into scene units.
 // Built from simple shapes (no downloads) so it stays light on phones.
 
@@ -14,7 +15,7 @@ export const COLORS = {
   gold: 0xc9a227,
 };
 
-const COURT_CENTER = { x: 0, z: -12 }; // in front of the team portrait and "Rally" print on the front wall
+const COURT_CENTER = { x: 0, z: -12 }; // in front of the team portrait and contact whiteboard on the front wall
 const COURT_SCALE = 0.35; // a full-size court (13.4 m) is longer than the room, so the floor court is about a third size
 
 const COURT = {
@@ -25,6 +26,9 @@ const COURT = {
   longServiceDoubles: 0.76, // doubles long service line, in from the back line
   line: 0.04,
   margin: 0.5, // mat around the outside of the lines
+  netTop: 1.55, // net height at the posts
+  netDepth: 0.76, // how far the mesh hangs down from the top tape
+  postOutside: 0.1, // posts stand just outside the doubles sidelines
 };
 
 const RACKET = {
@@ -123,6 +127,64 @@ const createCourt = () => {
   mat.rotation.x = -Math.PI / 2;
   mat.position.y = FLOOR_Y + 0.02;
   return mat;
+};
+
+// Net
+
+const drawNetMesh = (ctx, width, height) => {
+  const cell = 16;
+  ctx.clearRect(0, 0, width, height);
+  ctx.strokeStyle = 'rgba(20, 24, 24, 0.9)';
+  ctx.lineWidth = 2;
+  for (let x = 0; x <= width; x += cell) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += cell) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+};
+
+// Net across the middle of the court, in meters at real size, running along z on the court's x = 0
+const createNet = () => {
+  const net = new THREE.Group();
+  const span = COURT.width + 2 * COURT.postOutside;
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(span, COURT.netDepth),
+    new THREE.MeshStandardMaterial({
+      map: canvasTexture(1024, Math.round((1024 * COURT.netDepth) / span), drawNetMesh),
+      transparent: true,
+      alphaTest: 0.2,
+      side: THREE.DoubleSide,
+      roughness: 0.9,
+    })
+  );
+  mesh.position.y = COURT.netTop - COURT.netDepth / 2;
+  const tape = new THREE.Mesh(new THREE.BoxGeometry(span, 0.075, 0.01), solid(COLORS.cream, { roughness: 0.7 }));
+  tape.position.y = COURT.netTop - 0.0375;
+  const bottomCord = new THREE.Mesh(new THREE.BoxGeometry(span, 0.012, 0.008), solid(COLORS.ink));
+  bottomCord.position.y = COURT.netTop - COURT.netDepth;
+  net.add(mesh, tape, bottomCord);
+
+  [-1, 1].forEach((side) => {
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, COURT.netTop, 12), solid(COLORS.teal, { roughness: 0.4, metalness: 0.3 }));
+    post.position.set((side * span) / 2, COURT.netTop / 2, 0);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 0.05, 20), solid(COLORS.ink, { roughness: 0.5 }));
+    base.position.set((side * span) / 2, 0.025, 0);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), solid(COLORS.lime));
+    cap.position.set((side * span) / 2, COURT.netTop, 0);
+    net.add(post, base, cap);
+  });
+
+  net.rotation.y = Math.PI / 2; // span along z, across the length of the court
+  net.scale.setScalar(UNITS_PER_METER * COURT_SCALE);
+  net.position.y = FLOOR_Y + 0.02;
+  return net;
 };
 
 // Shuttlecock
@@ -348,29 +410,27 @@ const createFloorRacket = (x, z, angle, frameColor) => {
   return holder;
 };
 
-// Shuttle lying on its side, resting on the cork and the rim of the skirt
-const createFloorShuttle = (x, z, angle) => {
+// Shuttle standing upright on its cork
+const createStandingShuttle = (x, z) => {
   const shuttle = createShuttle(2);
-  shuttle.rotation.z = Math.PI / 2 - 0.27;
-  const holder = new THREE.Group();
-  holder.add(shuttle);
-  holder.position.set(x, FLOOR_Y + SHUTTLE.corkRadius * 2 * UNITS_PER_METER, z);
-  holder.rotation.y = angle;
-  return holder;
+  shuttle.position.set(x, FLOOR_Y + 0.02, z);
+  return shuttle;
 };
 
 // Returns the invisible colliders so main.js can add them to the walls the player bumps into
 export const createBadmintonDecor = (scene) => {
   // The court with everything standing or lying on it, moved as one
+  // One racket laid parallel to the net in the middle of each half, its shuttle standing beside it,
+  // mirrored so both sides match
+  const racketHalf = (RACKET.length / 2) * UNITS_PER_METER; // the racket's origin is the butt of the handle
   const court = new THREE.Group();
   court.add(
     createCourt(),
-    createFloorRacket(-4.5, 1.8, 0.5, COLORS.lime),
-    createFloorRacket(4.9, -1.5, 2.7, COLORS.teal),
-    createFloorShuttle(-2.8, -2.1, 0.8),
-    createFloorShuttle(2.5, 2.2, 2.2),
-    createFloorShuttle(5.9, 2.5, 4.1),
-    createFloorShuttle(-6.2, -0.8, 5.3)
+    createNet(),
+    createFloorRacket(-4, racketHalf, 0, COLORS.lime),
+    createFloorRacket(4, -racketHalf, Math.PI, COLORS.teal),
+    createStandingShuttle(-5.4, 0),
+    createStandingShuttle(5.4, 0)
   );
   court.position.set(COURT_CENTER.x, 0, COURT_CENTER.z);
 
@@ -384,5 +444,10 @@ export const createBadmintonDecor = (scene) => {
     ].map(createWallDisplay)
   );
 
-  return [collider(-15, -15, 1.6, 1.6), collider(15, -15, 1.6, 1.6)];
+  const netLength = (COURT.width + 2 * COURT.postOutside) * UNITS_PER_METER * COURT_SCALE;
+  return [
+    collider(-15, -15, 1.6, 1.6),
+    collider(15, -15, 1.6, 1.6),
+    collider(COURT_CENTER.x, COURT_CENTER.z, 0.4, netLength), // walk around the net, not through it
+  ];
 };

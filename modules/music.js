@@ -16,13 +16,14 @@ const SPEAKERS = [
 const VOLUME = 0.6;
 const HEARING_DISTANCE = 10; // full volume within this many units of a speaker, softer further away
 const FADE_TIME = 1.2; // seconds to fade in or out
-const START_ON_ENTER = true; // the "Meet the team" click counts as the user gesture browsers need for sound
+const START_ON_ENTER = true; // the "Meet our team in 3D" click counts as the user gesture browsers need for sound
 
 let listener;
 let jazz;
 let master;
 let playing = false;
 let stoppedByUser = false;
+let ducked = false; // silenced while the menu's intro video plays its own soundtrack (introVideo.js)
 
 const cabinetMaterial = new THREE.MeshStandardMaterial({ color: 0x3b2a1e, roughness: 0.6 }); // walnut
 const baffleMaterial = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.85 });
@@ -106,6 +107,26 @@ export const setupMusic = (scene, camera) => {
   return colliders;
 };
 
+// The music button shows what's playing now; pressing it switches to the other state
+const updateMusicButton = () => {
+  const button = document.getElementById('music_toggle');
+  button.querySelector('.music-icon').textContent = playing ? '🔊' : '🔇';
+  button.querySelector('.button-label').textContent = playing ? 'Stop Music' : 'Play Music';
+  button.setAttribute('aria-label', playing ? 'Stop music' : 'Play music');
+  button.setAttribute('aria-pressed', String(playing));
+};
+
+const fadeTo = (gain) => {
+  const context = listener.context;
+  master.gain.cancelScheduledValues(context.currentTime);
+  master.gain.setTargetAtTime(gain, context.currentTime, FADE_TIME / 3);
+};
+
+export const setMusicDucked = (on) => {
+  ducked = on;
+  if (playing) fadeTo(on ? 0 : 1);
+};
+
 export const startAudio = () => {
   if (!jazz || playing) return;
   const context = listener.context;
@@ -113,17 +134,16 @@ export const startAudio = () => {
   playing = true;
   stoppedByUser = false;
   jazz.start();
-  master.gain.cancelScheduledValues(context.currentTime);
-  master.gain.setTargetAtTime(1, context.currentTime, FADE_TIME / 3);
+  fadeTo(ducked ? 0 : 1);
+  updateMusicButton();
 };
 
 export const stopAudio = () => {
   if (!jazz || !playing) return;
-  const context = listener.context;
   playing = false;
   stoppedByUser = true;
-  master.gain.cancelScheduledValues(context.currentTime);
-  master.gain.setTargetAtTime(0, context.currentTime, FADE_TIME / 3);
+  fadeTo(0);
+  updateMusicButton();
   setTimeout(() => {
     if (!playing) jazz.stop();
   }, FADE_TIME * 1000);

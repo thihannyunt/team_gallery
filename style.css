@@ -69,123 +69,155 @@ canvas {
   height: 100%;
 }
 
-/* Start menu */
+/* Loading screen: covers everything until the gallery's assets have downloaded (modules/loadingScreen.js) */
 
-#menu {
-  width: 40em;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-sizing: border-box;
-  text-align: center;
-  font-size: 1.2em;
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 3000; /* above every overlay, including the photo viewer and exit dialog */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  background: radial-gradient(circle at 50% 40%, var(--cc-teal) 0%, var(--cc-teal-deep) 70%);
   color: var(--cc-cream);
-  background: radial-gradient(
-      120% 90% at 50% 0%,
-      #036664 0%,
-      var(--cc-teal) 45%,
-      var(--cc-teal-deep) 100%
-    );
-  border: 1px solid rgba(208, 235, 0, 0.18);
-  border-radius: 16px;
-  box-shadow: 0 24px 70px rgba(2, 24, 24, 0.55);
-  overflow: hidden;
-  animation: fadeInSlideUp 0.6s ease-out;
+  transition: opacity 0.5s ease, visibility 0.5s;
 }
 
-#menu_court {
-  position: absolute;
-  inset: 1.5em;
-  width: calc(100% - 3em);
-  height: calc(100% - 3em);
-  fill: none;
-  stroke: var(--cc-lime);
-  stroke-width: 1.2;
-  vector-effect: non-scaling-stroke;
-  opacity: 0.13;
+body:not(.loading) #loading-screen {
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
-#menu_court line,
-#menu_court rect {
-  vector-effect: non-scaling-stroke;
+.loading-card {
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
 }
 
-#menu_court .net {
-  stroke: var(--cc-cream);
-  stroke-width: 2;
-  stroke-dasharray: 3 3;
-}
-
-#menu #content {
-  position: relative;
-  padding: 2.5em 2.5em 1.75em;
-}
-
-#menu .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6em;
-  font-weight: 800;
-  font-size: 0.95em;
-  letter-spacing: 0.04em;
-  color: var(--cc-cream);
-}
-
-#menu .brand-mark {
-  width: 2.25em;
-  height: 2.25em;
-  border-radius: 7px;
-  box-shadow: 0 0 0 1px var(--cc-cream-faint);
-}
-
-#menu #content p.eyebrow {
-  margin: 1.75em auto 0.5em;
-  font-size: 0.8em;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+.loading-eyebrow {
+  margin: 0 0 0.6em;
   color: var(--cc-lime);
-}
-
-#menu h1 {
-  margin: 0 0 0.4em;
-  font-size: 2.6em;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--cc-cream);
-}
-
-#menu h1 span {
-  color: var(--cc-lime);
-}
-
-#menu #content p {
-  max-width: 28em;
-  margin: 0.5em auto;
   font-size: 1em;
-  line-height: 1.6;
-  color: var(--cc-cream-muted);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
-#menu #content p.lede {
-  font-size: 1.15em;
+#loading-title {
+  margin: 0 0 1.2em;
+  font-size: 2.2em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.loading-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--cc-cream-faint);
+  overflow: hidden;
+}
+
+#loading-bar {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--cc-lime);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.3s ease-out;
+}
+
+/* A light sweeping along the bar, so it still looks alive while one big file downloads */
+#loading-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: loadingSweep 1.4s ease-in-out infinite;
+}
+
+.loading-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+  margin: 0.9em 0 0;
+  color: var(--cc-cream-muted);
+  font-size: 1.05em;
   font-weight: 600;
+}
+
+#loading-percent {
   color: var(--cc-cream);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes loadingSweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #loading-bar::after {
+    animation: none;
+  }
+}
+
+/* Landing video: a walk-through of the gallery playing behind the menu (modules/introVideo.js) */
+
+#intro-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-color: var(--cc-ink);
+  z-index: 0;
+  transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+body.exploring #intro-video {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Start menu: just the buttons, floating over the bottom of the video */
+
+#menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(32px + env(safe-area-inset-bottom));
+  z-index: 1;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 1.2em;
+  pointer-events: none; /* only the buttons take clicks, the space around them lets the video through */
+  animation: fadeInSlideUp 0.6s ease-out;
+}
+
+#menu #play_button,
+#menu button {
+  pointer-events: auto;
 }
 
 #menu #play_button {
   display: inline-block;
-  margin: 1.5em 0 1em;
+  margin: 0 0 0.9em;
   padding: 0.85em 2.25em;
   background-color: var(--cc-lime);
   color: var(--cc-ink);
   border-radius: 12px;
   font-weight: 800;
   letter-spacing: 0.08em;
-  box-shadow: 0 8px 24px rgba(208, 235, 0, 0.22);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   transition: background-color 0.2s, transform 0.2s;
 }
 
@@ -203,41 +235,45 @@ canvas {
 }
 
 #about_button,
-#touch_toggle {
-  background: transparent;
+#touch_toggle,
+#intro-sound {
+  background-color: var(--cc-ink-glass);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: var(--cc-cream);
-  border: 1px solid var(--cc-cream-faint);
+  border: 1px solid rgba(246, 244, 239, 0.35);
   border-radius: 999px;
   padding: 0.55em 1.25em;
   font-size: 0.8em;
   font-weight: 700;
   letter-spacing: 0.08em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
 #about_button:hover,
-#touch_toggle:hover {
-  background-color: rgba(246, 244, 239, 0.08);
-  border-color: rgba(246, 244, 239, 0.45);
+#touch_toggle:hover,
+#intro-sound:hover {
+  background-color: rgba(13, 17, 17, 0.94);
+  border-color: rgba(246, 244, 239, 0.6);
 }
 
-#menu #content p.credit {
-  margin: 1.75em auto 0;
-  padding-top: 1.25em;
-  border-top: 1px solid rgba(246, 244, 239, 0.12);
-  font-size: 0.8em;
-  color: rgba(246, 244, 239, 0.5);
+/* Muted video: the sound button stands out so visitors know there's audio to turn on */
+#intro-sound[aria-pressed="false"] {
+  background-color: var(--cc-lime);
+  border-color: var(--cc-lime);
+  color: var(--cc-ink);
 }
 
 @keyframes fadeInSlideUp {
   0% {
     opacity: 0;
-    transform: translate(-50%, calc(-50% + 24px));
+    transform: translateY(24px);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
   }
 }
 
@@ -782,6 +818,15 @@ body.touch-mode .key-hint {
   border-color: var(--cc-lime);
 }
 
+.music-icon {
+  margin-right: 6px;
+}
+
+/* The "!" controls button is for phones and tablets only; desktops keep the controls panel */
+#audio_controls #help_button {
+  display: none;
+}
+
 /* Touch controls (phones and tablets, see modules/touchControls.js) */
 
 #touch-ui {
@@ -828,9 +873,11 @@ body.touch-mode button {
   font-weight: 600;
 }
 
+/* Centred along the bottom on every screen, upright or sideways */
 #joystick {
   position: fixed;
-  left: calc(24px + env(safe-area-inset-left));
+  left: 50%;
+  transform: translateX(-50%);
   bottom: calc(24px + env(safe-area-inset-bottom));
   /* 120px on phones, growing with the screen up to 200px on large tablets */
   width: clamp(120px, 24vmin, 200px);
@@ -854,6 +901,24 @@ body.touch-mode button {
   pointer-events: none;
 }
 
+/* Forward / back / left / right arrows around the knob */
+.joystick-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.joystick-arrows path {
+  fill: rgba(246, 244, 239, 0.75);
+  transition: fill 0.12s;
+}
+
+.joystick-arrows path.active {
+  fill: var(--cc-lime);
+}
+
 .touch-help {
   display: none;
 }
@@ -866,10 +931,18 @@ body.touch-mode .keyboard-help {
   display: none;
 }
 
+/* Phones and tablets: no panel on screen, the "!" button drops it down under the top-right buttons */
 body.touch-mode #info-panel {
-  width: 150px;
-  bottom: calc(10px + env(safe-area-inset-bottom));
+  width: 190px;
+  top: calc(56px + env(safe-area-inset-top));
+  bottom: auto;
   right: calc(10px + env(safe-area-inset-right));
+  z-index: 3;
+}
+
+body.touch-mode #info-panel.collapsed,
+body.touch-mode #info-header {
+  display: none;
 }
 
 body.touch-mode #audio_controls {
@@ -886,16 +959,25 @@ body.touch-mode #audio_controls button {
   line-height: 1;
 }
 
-.touch-icon {
-  display: none;
-}
-
-body.touch-mode .touch-icon {
-  display: inline;
+body.touch-mode .music-icon {
+  margin-right: 0;
 }
 
 body.touch-mode .button-label {
   display: none;
+}
+
+/* Square, same size as the music icon beside it */
+body.touch-mode #audio_controls #help_button {
+  display: block;
+  width: 38px;
+  font-weight: 800;
+}
+
+body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
+  background-color: var(--cc-lime);
+  border-color: var(--cc-lime);
+  color: var(--cc-ink);
 }
 
 /* Painting info sits under the top button row instead of covering the joystick */
@@ -920,26 +1002,13 @@ body.touch-mode #painting-info p {
   font-size: 1em;
 }
 
-/* "Turn your phone sideways" reminders, only for touch screens held upright */
-
-.rotate-hint {
-  display: none;
-}
-
-#menu #content p.rotate-hint {
-  color: var(--cc-lime);
-  font-weight: 600;
-}
+/* "Turn your phone sideways" reminder, only for touch screens held upright */
 
 #rotate-toast {
   display: none;
 }
 
 @media (orientation: portrait) {
-  body.touch-mode .rotate-hint {
-    display: block;
-  }
-
   body.touch-mode.exploring #rotate-toast.show {
     display: flex;
   }
@@ -979,24 +1048,17 @@ body.touch-mode #painting-info p {
 
 /* Small screens: keep the menu and about page inside the viewport */
 
-#menu {
-  max-width: calc(100vw - 24px);
-  max-height: calc(100vh - 24px);
-  max-height: calc(100dvh - 24px);
-  overflow-y: auto;
+/* Upright screens: show the whole wide video (cropping it to fill a tall screen would cut the
+   gallery off at the sides); the buttons float in the space underneath */
+@media (orientation: portrait) {
+  #intro-video {
+    object-fit: contain;
+  }
 }
 
 @media (max-width: 600px) {
   #menu {
     font-size: 1em;
-  }
-
-  #menu #content {
-    padding: 2em 1.25em 1.5em;
-  }
-
-  #menu h1 {
-    font-size: 2.1em;
   }
 
   #about-overlay {
@@ -1008,32 +1070,12 @@ body.touch-mode #painting-info p {
 
 @media (max-height: 500px) {
   #menu {
+    bottom: calc(16px + env(safe-area-inset-bottom));
     font-size: 1em;
   }
 
-  #menu #content {
-    padding: 1.25em 1.5em 1em;
-  }
-
-  #menu #content p.eyebrow {
-    margin-top: 0.75em;
-  }
-
-  #menu h1 {
-    font-size: 1.8em;
-  }
-
-  #menu #content p {
-    line-height: 1.4;
-  }
-
   #menu #play_button {
-    margin: 0.75em 0;
-  }
-
-  #menu #content p.credit {
-    margin-top: 1em;
-    padding-top: 0.75em;
+    margin-bottom: 0.6em;
   }
 
   #about-overlay {
@@ -1042,7 +1084,15 @@ body.touch-mode #painting-info p {
   }
 }
 
-/* The lil-gui debug panels would cover the whole screen on a phone */
-body.touch-mode .lil-gui.root {
+/* The lil-gui lighting/model debug panels are for development only, never shown to visitors */
+.lil-gui.root {
+  display: none;
+}
+
+/* Landing page: only the video and the floating menu buttons, nothing else covering the gallery
+   walk-through. Last in the file so it wins over the touch-mode layouts above. */
+body:not(.exploring) #audio_controls,
+body:not(.exploring) #info-panel,
+body:not(.exploring) #painting-info {
   display: none;
 }

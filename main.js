@@ -20,11 +20,18 @@ import { loadBenchModel } from "./modules/bench.js";
 import { loadCeilingLampModel } from "./modules/ceilingLamp.js";
 import { createBadmintonDecor } from "./modules/badmintonDecor.js";
 import { setupProjector } from "./modules/projector.js";
-import { createFeatureArt, featureArtLight } from "./modules/featureArt.js";
+import { createContactBoard, contactBoardLight } from "./modules/contactBoard.js";
+import { setupIntroVideo, playIntroVideo } from "./modules/introVideo.js";
+import { setupLoadingScreen } from "./modules/loadingScreen.js";
 import { createLounge } from "./modules/lounge.js";
 import { setupAboutPage } from "./modules/aboutPage.js";
 import { setupSeating } from "./modules/seating.js";
 import { setupExitDoor } from "./modules/exitDoor.js";
+
+setupIntroVideo(); // first, so the landing video buffers while the gallery is built
+
+// Before any loader starts, so it counts every texture and model. The video plays once they're in.
+setupLoadingScreen(playIntroVideo);
 
 let { camera, controls, renderer } = setupScene();
 
@@ -34,14 +41,14 @@ const walls = createWalls(scene, textureLoader);
 const floor = setupFloor(scene);
 const ceiling = createCeiling(scene, textureLoader);
 const paintings = createPaintings(scene, textureLoader);
-const lighting = setupLighting(scene, paintings, [featureArtLight]);
+const lighting = setupLighting(scene, paintings, [contactBoardLight]);
 
 // The decor's solid pieces join the walls so the player can't walk through them
 walls.add(...createBadmintonDecor(scene), ...createLounge(scene), ...setupMusic(scene, camera));
 
 setupProjector(scene);
 
-createFeatureArt(scene);
+createContactBoard(scene);
 
 setupAboutPage();
 

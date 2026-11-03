@@ -75,5 +75,6 @@ export const about = {
   highlights: ['6 teammates', 'One obsession', 'Built for badminton'],
   email: 'office.courtconnect@gmail.com',
   appUrl: 'https://cconnect.tspdigital.solutions',
+  lineUrl: 'https://line.me/ti/p/~Kopaye-19', // LINE chat, on the contact whiteboard and the About page
   signOff: 'See you on court.',
 };

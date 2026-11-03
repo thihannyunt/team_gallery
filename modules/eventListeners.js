@@ -26,9 +26,11 @@ export const setupEventListeners = (controls, camera, scene) => {
     showMenuOnUnlock = false;
   });
 
-  // Add event listeners for the music buttons
-  document.getElementById("start_audio").addEventListener("click", startAudio);
-  document.getElementById("stop_audio").addEventListener("click", stopAudio);
+  // One button toggles the music
+  document.getElementById("music_toggle").addEventListener("click", () => {
+    if (document.getElementById("music_toggle").getAttribute("aria-pressed") === "true") stopAudio();
+    else startAudio();
+  });
 };
 
 // toggle the pointer lock
@@ -43,6 +45,9 @@ function togglePointerLock(controls) {
 }
 
 function onKeyDown(event, controls) {
+  // no shortcuts until the loading screen is gone, Enter would otherwise walk into a half-built gallery
+  if (document.body.classList.contains("loading")) return;
+
   // event is the event object that has the key property
   if (event.key in keysPressed) {
     // check if the key pressed by the user is in the keysPressed object
@@ -107,14 +112,14 @@ function onKeyUp(event, controls) {
   }
 }
 
-document.getElementById("toggle-info").addEventListener("click", () => {
-  document.getElementById("info-panel").classList.toggle("collapsed");
-  document.getElementById("toggle-info").innerText = document
-    .getElementById("info-panel")
-    .classList.contains("collapsed")
-    ? "Show"
-    : "Hide";
-});
+const toggleInfoPanel = () => {
+  const collapsed = document.getElementById("info-panel").classList.toggle("collapsed");
+  document.getElementById("toggle-info").innerText = collapsed ? "Show" : "Hide";
+  document.getElementById("help_button").setAttribute("aria-expanded", String(!collapsed));
+};
+
+document.getElementById("toggle-info").addEventListener("click", toggleInfoPanel);
+document.getElementById("help_button").addEventListener("click", toggleInfoPanel); // the "!" button on phones
 
 document.getElementById("about_button").addEventListener("click", function () {
   document.getElementById("about-overlay").classList.add("show");

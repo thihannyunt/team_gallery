@@ -7,69 +7,53 @@
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
     />
 
-    <title>Court Connect Crew</title>
+    <title>Court Connect Crew · Meet our team in 3D</title>
     <meta name="theme-color" content="#024b4a" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style.css" />
   </head>
 
-  <body>
+  <body class="loading">
+    <!-- Covers the page until the gallery's textures and models have downloaded (modules/loadingScreen.js) -->
+    <div id="loading-screen" role="status" aria-live="polite" aria-labelledby="loading-title">
+      <div class="loading-card">
+        <p class="loading-eyebrow">Court Connect Crew</p>
+        <h1 id="loading-title">Loading the gallery</h1>
+        <div class="loading-track" aria-hidden="true">
+          <div id="loading-bar"></div>
+        </div>
+        <p class="loading-meta">
+          <span id="loading-status"></span>
+          <span id="loading-percent">0%</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Gallery walk-through behind the landing menu, paused while exploring (modules/introVideo.js) -->
+    <video
+      id="intro-video"
+      src="/video/court-connect-intro.mp4"
+      poster="/video/court-connect-intro.jpg"
+      preload="auto"
+      loop
+      playsinline
+      aria-hidden="true"
+    ></video>
+
+    <!-- Landing page: just the buttons, floating over the gallery walk-through video. The welcome text
+         and the credit to Emilian Kasemi's open-source 3D Art Gallery live on the About page. -->
     <div id="menu">
-      <!-- Badminton court lines, drawn to scale (13.4m x 6.1m) -->
-      <svg
-        id="menu_court"
-        viewBox="0 0 134 61"
-        preserveAspectRatio="xMidYMid meet"
-        aria-hidden="true"
-      >
-        <rect x="0.5" y="0.5" width="133" height="60" />
-        <line x1="0" y1="5" x2="134" y2="5" />
-        <line x1="0" y1="56" x2="134" y2="56" />
-        <line x1="7.6" y1="0" x2="7.6" y2="61" />
-        <line x1="126.4" y1="0" x2="126.4" y2="61" />
-        <line x1="47.2" y1="0" x2="47.2" y2="61" />
-        <line x1="86.8" y1="0" x2="86.8" y2="61" />
-        <line x1="0" y1="30.5" x2="47.2" y2="30.5" />
-        <line x1="86.8" y1="30.5" x2="134" y2="30.5" />
-        <line class="net" x1="67" y1="0" x2="67" y2="61" />
-      </svg>
-
-      <div id="content">
-        <div class="brand">
-          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="7" fill="#024b4a" />
-            <path fill="#f6f4ef" d="M16 7 22 19H10l6-12Z" />
-            <ellipse cx="16" cy="22.5" fill="#c9a227" rx="5" ry="2.5" />
-          </svg>
-          <span>Court Connect</span>
-        </div>
-
-        <p class="eyebrow">Team portfolio · 3D gallery</p>
-        <h1>Court Connect <span>Crew</span></h1>
-        <p class="lede">Meet the six people behind Court Connect.</p>
-        <p>
-          This is our crew's website. Move around by yourself and explore the
-          room: walk up to each teammate, see their role, and find out what
-          they work on.
-        </p>
-        <p class="rotate-hint">📱 Turn your phone sideways for the best view.</p>
-
-        <div id="play_button">MEET THE TEAM</div>
-
-        <div class="menu-secondary">
-          <button id="about_button">ABOUT</button>
-          <button id="touch_toggle">TOUCH CONTROLS: OFF</button>
-        </div>
-
-        <p class="credit">
-          Built on the open-source 3D Art Gallery by Emilian Kasemi.
-        </p>
+      <div id="play_button" role="button" tabindex="0">MEET OUR TEAM IN 3D</div>
+      <div class="menu-secondary">
+        <button id="about_button">ABOUT</button>
+        <button id="touch_toggle">TOUCH CONTROLS: OFF</button>
+        <button id="intro-sound" aria-label="Video sound" aria-pressed="false"></button>
       </div>
     </div>
 
@@ -91,7 +75,8 @@
 
       <h2>Get in touch</h2>
       <p>
-        Email <a id="about-email"></a>, or open
+        Email <a id="about-email"></a>, chat with us on
+        <a id="about-line" target="_blank" rel="noopener">LINE</a>, or open
         <a id="about-app" target="_blank" rel="noopener">Court Connect</a> to start organising your next
         session.
       </p>
@@ -99,7 +84,7 @@
 
       <p class="about-help">
         Exploring the gallery: walk with W/A/S/D or the arrow keys and look around with the mouse. On a
-        phone or tablet, use the joystick in the bottom-left corner and drag to look around. Click or tap
+        phone or tablet, use the joystick at the bottom of the screen and drag to look around. Click or tap
         any portrait to see it up close.
       </p>
       <p class="about-help">Built on the open-source 3D Art Gallery by Emilian Kasemi.</p>
@@ -129,20 +114,19 @@
           <p><b>Tap painting:</b> View photo</p>
           <p><b>☰ Menu:</b> Show Menu</p>
           <p><b>👁:</b> Switch 1st / 3rd person</p>
+          <p><b>🔊:</b> Music on / off</p>
         </div>
       </div>
     </div>
 
     <div id="audio_controls">
-      <!-- Phones show just the icon so the buttons fit beside the menu (see style.css) -->
-      <button id="start_audio" aria-label="Play music">
-        <span class="touch-icon" aria-hidden="true">🔊</span>
+      <!-- One music on/off toggle (modules/music.js); phones show just its icon (see style.css).
+           Phones also get the "!" button, which opens the controls panel instead of keeping it on screen. -->
+      <button id="music_toggle" aria-label="Play music" aria-pressed="false">
+        <span class="music-icon" aria-hidden="true">🔇</span>
         <span class="button-label">Play Music</span>
       </button>
-      <button id="stop_audio" aria-label="Stop music">
-        <span class="touch-icon" aria-hidden="true">🔇</span>
-        <span class="button-label">Stop Music</span>
-      </button>
+      <button id="help_button" aria-label="Show controls" aria-expanded="false">!</button>
     </div>
 
     <div id="painting-info"></div>
@@ -183,7 +167,16 @@
         <button id="touch-menu-button">☰ Menu</button>
         <button id="touch-view-button">👁 1st person</button>
       </div>
-      <div id="joystick"><div id="joystick-knob"></div></div>
+      <div id="joystick">
+        <!-- Forward, back, left and right hints; the one you're pushing toward lights up (touchControls.js) -->
+        <svg class="joystick-arrows" viewBox="0 0 100 100" aria-hidden="true">
+          <path data-direction="forward" d="M50 5 59 16H41Z" />
+          <path data-direction="back" d="M50 95 59 84H41Z" />
+          <path data-direction="left" d="M5 50 16 41V59Z" />
+          <path data-direction="right" d="M95 50 84 41V59Z" />
+        </svg>
+        <div id="joystick-knob"></div>
+      </div>
     </div>
 
     <script type="module" src="/main.js"></script>

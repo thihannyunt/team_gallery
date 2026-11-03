@@ -1,13 +1,17 @@
+import { playIntroVideo, pauseIntroVideo } from './introVideo.js';
+
 export const hideMenu = () => {
   const menu = document.getElementById('menu');
   menu.style.display = 'none'; // Hide the menu
   document.body.classList.add('exploring'); // Show the on-screen touch controls (in touch mode)
+  pauseIntroVideo();
 };
 
 export const showMenu = () => {
   const menu = document.getElementById('menu');
   menu.style.display = 'block'; // Show the menu
   document.body.classList.remove('exploring');
+  playIntroVideo(); // the gallery walk-through plays behind the menu
 };
 
 // Lock the pointer (controls are activated) and hide the menu when the experience starts

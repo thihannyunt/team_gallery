@@ -4,7 +4,7 @@ import { GUI } from "lil-gui";
 // Warm, soft gallery lighting: the room sits in a low warm glow and every artwork gets its own
 // ceiling track spotlight, so each photo hangs in a soft pool of light on the wall. A warm LED strip
 // runs along the top of the walls. The projector wall gets no spotlight so the screen stands out.
-// Photos, the "Rally" print and the projector screen are unlit (always full brightness), so the
+// Photos and the projector screen are unlit (always full brightness), so the
 // lighting only shapes the room around them.
 
 const WARM_LIGHT = 0xffd9a8; // about 3000 K

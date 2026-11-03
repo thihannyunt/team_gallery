@@ -46,10 +46,10 @@ const UNITS_PER_INCH = 0.14;
 // `frame` is the finish of the shared thin frame profile: 'oak' (natural wood) or 'black' (matte metal).
 // A wall without a `title` gets no wall label.
 // The right wall holds the "Team Activities" projector screen (projector.js) and the front wall's
-// "Rally" print hangs to the right of the team portrait (featureArt.js).
+// "Contact us" whiteboard hangs to the right of the team portrait (contactBoard.js).
 const walls = [
   {
-    // The team portrait, with the "Rally" print beside it (no wall label)
+    // The team portrait, with the contact whiteboard beside it (no wall label)
     layout: statementSatellites,
     layoutOptions: { anchor: [36, 36] }, // square anchor to match the square team portrait
     frame: 'oak',

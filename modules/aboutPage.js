@@ -53,4 +53,5 @@ export const setupAboutPage = () => {
   email.textContent = about.email;
   email.href = `mailto:${about.email}`;
   document.getElementById('about-app').href = about.appUrl;
+  document.getElementById('about-line').href = about.lineUrl;
 };

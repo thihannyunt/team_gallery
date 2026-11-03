@@ -6,6 +6,7 @@ import { openPaintingAt } from "./clickHandling.js";
 const STORAGE_KEY = "touchControls"; // remembers the manual on/off override from the menu
 const LOOK_SPEED = 0.005; // radians the camera turns per pixel dragged
 const DEAD_ZONE = 0.15; // joystick pushes smaller than this (0 to 1) are ignored
+const ARROW_THRESHOLD = 0.35; // how far toward a direction the joystick must be pushed to light its arrow
 const TAP_MAX_MOVE = 10; // pixels a finger can drift and still count as a tap
 const TAP_MAX_TIME = 300; // milliseconds a finger can stay down and still count as a tap
 const ROTATE_TOAST_TIME = 6000; // milliseconds the "turn your phone sideways" reminder stays up
@@ -13,11 +14,22 @@ const ROTATE_TOAST_TIME = 6000; // milliseconds the "turn your phone sideways" r
 const euler = new THREE.Euler(0, 0, 0, "YXZ"); // same rotation order PointerLockControls uses
 
 let enabled = false;
-let joystickTouchId = null;
-let lookTouch = null;
+let joystickPointerId = null;
+let lookPointer = null;
+let choseManually = false; // the visitor used the menu's TOUCH CONTROLS button during this visit
 
-// Phones and tablets report a coarse (finger) pointer; laptops with a touchscreen still report a fine one
-const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
+// Phone and tablet sized screens get the joystick, whatever the browser says about itself
+const TOUCH_SIZED_SCREEN = window.matchMedia("(max-width: 1024px)");
+
+// Phones and tablets report a coarse (finger) pointer; laptops with a touchscreen still report a fine one.
+// Some browsers and device emulators (e.g. Safari's Responsive Design Mode) report a fine pointer even
+// for a phone, so a phone or tablet user agent, a touch screen that can't hover, or a phone or tablet
+// sized window counts too.
+const isTouchDevice = () =>
+  TOUCH_SIZED_SCREEN.matches ||
+  window.matchMedia("(pointer: coarse)").matches ||
+  /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 0 && window.matchMedia("(hover: none)").matches);
 
 const readOverride = () => {
   try {
@@ -38,15 +50,26 @@ const saveOverride = (on) => {
 // Touch controls only react while the gallery is being explored, not while the menu is open
 const isActive = () => enabled && document.body.classList.contains("exploring");
 
-const findTouch = (touches, id) =>
-  Array.from(touches).find((touch) => touch.identifier === id);
+// Lights the joystick's forward/back/left/right arrows that match the current push
+const highlightArrows = () => {
+  const pushed = {
+    forward: touchInput.forward > ARROW_THRESHOLD,
+    back: touchInput.forward < -ARROW_THRESHOLD,
+    left: touchInput.right < -ARROW_THRESHOLD,
+    right: touchInput.right > ARROW_THRESHOLD,
+  };
+  document.querySelectorAll(".joystick-arrows path").forEach((arrow) => {
+    arrow.classList.toggle("active", pushed[arrow.dataset.direction]);
+  });
+};
 
 export const resetTouchInput = () => {
-  joystickTouchId = null;
-  lookTouch = null;
+  joystickPointerId = null;
+  lookPointer = null;
   touchInput.forward = 0;
   touchInput.right = 0;
   document.getElementById("joystick-knob").style.transform = "";
+  highlightArrows();
 };
 
 const setTouchMode = (on) => {
@@ -56,16 +79,17 @@ const setTouchMode = (on) => {
   resetTouchInput();
 };
 
-// Left joystick: walk forward/back and strafe, pushing further walks faster
+// Joystick (bottom centre): walk forward/back and strafe, pushing further walks faster.
+// Pointer events, so a finger, a pen or a mouse (e.g. a phone-sized desktop window) can all drive it.
 const setupJoystick = () => {
   const base = document.getElementById("joystick");
   const knob = document.getElementById("joystick-knob");
 
-  const moveKnob = (touch) => {
+  const moveKnob = (pointer) => {
     const rect = base.getBoundingClientRect();
     const maxDistance = rect.width / 2;
-    let dx = touch.clientX - (rect.left + maxDistance);
-    let dy = touch.clientY - (rect.top + rect.height / 2);
+    let dx = pointer.clientX - (rect.left + maxDistance);
+    let dy = pointer.clientY - (rect.top + rect.height / 2);
     const distance = Math.hypot(dx, dy);
     if (distance > maxDistance) {
       // keep the knob inside the base
@@ -77,98 +101,82 @@ const setupJoystick = () => {
     const strength = Math.min(distance / maxDistance, 1);
     touchInput.right = strength < DEAD_ZONE ? 0 : dx / maxDistance;
     touchInput.forward = strength < DEAD_ZONE ? 0 : -dy / maxDistance; // screen y points down
+    highlightArrows();
   };
 
-  base.addEventListener(
-    "touchstart",
-    (event) => {
-      event.preventDefault();
-      if (joystickTouchId !== null) return;
-      const touch = event.changedTouches[0];
-      joystickTouchId = touch.identifier;
-      moveKnob(touch);
-    },
-    { passive: false }
-  );
+  base.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    if (joystickPointerId !== null) return;
+    joystickPointerId = event.pointerId;
+    base.setPointerCapture(event.pointerId); // keeps the moves coming after the finger slides off the joystick
+    moveKnob(event);
+  });
 
-  // touchmove/touchend keep firing on the element the finger started on, even after it slides off
-  base.addEventListener(
-    "touchmove",
-    (event) => {
-      event.preventDefault();
-      const touch = findTouch(event.changedTouches, joystickTouchId);
-      if (touch) moveKnob(touch);
-    },
-    { passive: false }
-  );
+  base.addEventListener("pointermove", (event) => {
+    if (event.pointerId === joystickPointerId) moveKnob(event);
+  });
 
   const release = (event) => {
-    if (findTouch(event.changedTouches, joystickTouchId)) {
+    if (event.pointerId === joystickPointerId) {
       resetTouchInput();
     }
   };
-  base.addEventListener("touchend", release);
-  base.addEventListener("touchcancel", release);
+  base.addEventListener("pointerup", release);
+  base.addEventListener("pointercancel", release);
 };
 
 // Dragging anywhere on the scene looks around, a quick tap opens the painting under the finger
 const setupLook = (canvas, camera, paintings) => {
-  canvas.addEventListener(
-    "touchstart",
-    (event) => {
-      if (!isActive()) return;
-      event.preventDefault(); // also stops the browser's synthetic click, taps are handled below
-      if (lookTouch) return;
-      const touch = event.changedTouches[0];
-      lookTouch = {
-        id: touch.identifier,
-        x: touch.clientX,
-        y: touch.clientY,
-        startX: touch.clientX,
-        startY: touch.clientY,
-        startTime: performance.now(),
-      };
-    },
-    { passive: false }
-  );
+  canvas.addEventListener("pointerdown", (event) => {
+    if (!isActive() || lookPointer || event.button !== 0) return;
+    canvas.setPointerCapture(event.pointerId);
+    lookPointer = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      startX: event.clientX,
+      startY: event.clientY,
+      startTime: performance.now(),
+    };
+  });
 
-  canvas.addEventListener(
-    "touchmove",
-    (event) => {
-      if (!isActive() || !lookTouch) return;
-      event.preventDefault();
-      const touch = findTouch(event.changedTouches, lookTouch.id);
-      if (!touch) return;
+  canvas.addEventListener("pointermove", (event) => {
+    if (!isActive() || event.pointerId !== lookPointer?.id) return;
 
-      euler.setFromQuaternion(camera.quaternion);
-      euler.y -= (touch.clientX - lookTouch.x) * LOOK_SPEED;
-      euler.x -= (touch.clientY - lookTouch.y) * LOOK_SPEED;
-      euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x)); // don't flip over the top
-      camera.quaternion.setFromEuler(euler);
+    euler.setFromQuaternion(camera.quaternion);
+    euler.y -= (event.clientX - lookPointer.x) * LOOK_SPEED;
+    euler.x -= (event.clientY - lookPointer.y) * LOOK_SPEED;
+    euler.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, euler.x)); // don't flip over the top
+    camera.quaternion.setFromEuler(euler);
 
-      lookTouch.x = touch.clientX;
-      lookTouch.y = touch.clientY;
-    },
-    { passive: false }
-  );
+    lookPointer.x = event.clientX;
+    lookPointer.y = event.clientY;
+  });
 
-  canvas.addEventListener("touchend", (event) => {
-    if (!lookTouch) return;
-    const touch = findTouch(event.changedTouches, lookTouch.id);
-    if (!touch) return;
+  canvas.addEventListener("pointerup", (event) => {
+    if (event.pointerId !== lookPointer?.id) return;
 
-    const moved = Math.hypot(touch.clientX - lookTouch.startX, touch.clientY - lookTouch.startY);
-    const duration = performance.now() - lookTouch.startTime;
+    const moved = Math.hypot(event.clientX - lookPointer.startX, event.clientY - lookPointer.startY);
+    const duration = performance.now() - lookPointer.startTime;
     if (isActive() && moved < TAP_MAX_MOVE && duration < TAP_MAX_TIME) {
-      event.preventDefault(); // no follow-up click, it would land on the pop-up and close it straight away
-      openPaintingAt(touch.clientX, touch.clientY, paintings);
+      openPaintingAt(event.clientX, event.clientY, paintings);
     }
-    lookTouch = null;
+    lookPointer = null;
   });
 
-  canvas.addEventListener("touchcancel", () => {
-    lookTouch = null;
+  canvas.addEventListener("pointercancel", (event) => {
+    if (event.pointerId === lookPointer?.id) lookPointer = null;
   });
+
+  // Taps are handled above, so the click that follows must not reach clickHandling.js: it would open the
+  // painting a second time, or open one at the end of a drag
+  window.addEventListener(
+    "click",
+    (event) => {
+      if (enabled && event.target === canvas) event.stopImmediatePropagation();
+    },
+    true
+  );
 };
 
 export const setupTouchControls = (renderer, camera, paintings) => {
@@ -193,12 +201,21 @@ export const setupTouchControls = (renderer, camera, paintings) => {
   });
 
   document.getElementById("touch_toggle").addEventListener("click", () => {
+    choseManually = true;
     setTouchMode(!enabled);
     saveOverride(enabled);
   });
 
-  const override = readOverride();
-  setTouchMode(override ? override === "on" : isTouchDevice());
+  // Phones and tablets always start with the joystick: without a keyboard there's no other way to walk.
+  // A remembered "on" still turns it on for desktops; turning it off on a phone lasts for this visit only.
+  const detectTouchMode = () => setTouchMode(isTouchDevice() || readOverride() === "on");
+  detectTouchMode();
+
+  // Resizing a desktop window down to phone or tablet size (or back) switches the joystick on (or off),
+  // unless the visitor already picked with the menu button
+  TOUCH_SIZED_SCREEN.addEventListener("change", () => {
+    if (!choseManually) detectTouchMode();
+  });
 
   if (enabled) {
     // the controls help panel takes up too much of a small screen, start it collapsed
