@@ -211,7 +211,8 @@ body.exploring #intro-video {
 #menu #play_button {
   display: inline-block;
   margin: 0 0 0.9em;
-  padding: 0.85em 2.25em;
+  padding: 0.95em 2.4em;
+  font-size: 1.35em;
   background-color: var(--cc-lime);
   color: var(--cc-ink);
   border-radius: 12px;
@@ -563,11 +564,6 @@ body.exploring #intro-video {
   display: none;
 }
 
-/* Above the joystick and controls panel on touch screens */
-body.touch-mode #seat-button {
-  bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
-}
-
 /* Keyboard shortcut hints, hidden on touch screens */
 body.touch-mode .key-hint {
   display: none;
@@ -873,11 +869,10 @@ body.touch-mode button {
   font-weight: 600;
 }
 
-/* Centred along the bottom on every screen, upright or sideways */
+/* Bottom left, under the left thumb like a game pad, on tablets and on phones held sideways */
 #joystick {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  left: calc(32px + env(safe-area-inset-left));
   bottom: calc(24px + env(safe-area-inset-bottom));
   /* 120px on phones, growing with the screen up to 200px on large tablets */
   width: clamp(120px, 24vmin, 200px);
@@ -887,6 +882,19 @@ body.touch-mode button {
   border: 2px solid rgba(208, 235, 0, 0.55);
   touch-action: none;
   z-index: 3;
+}
+
+/* Phones held upright: centred along the bottom, where either thumb reaches it */
+@media (orientation: portrait) and (max-width: 600px) {
+  #joystick {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Above the centred joystick */
+  body.touch-mode #seat-button {
+    bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
+  }
 }
 
 #joystick-knob {
@@ -1059,6 +1067,12 @@ body.touch-mode #painting-info p {
 @media (max-width: 600px) {
   #menu {
     font-size: 1em;
+  }
+
+  /* Still bigger than the other buttons, but fits on one line on a narrow phone */
+  #menu #play_button {
+    padding: 0.9em 1.6em;
+    font-size: 1.15em;
   }
 
   #about-overlay {

@@ -79,7 +79,7 @@ const setTouchMode = (on) => {
   resetTouchInput();
 };
 
-// Joystick (bottom centre): walk forward/back and strafe, pushing further walks faster.
+// Joystick (bottom left, or bottom centre on an upright phone): walk forward/back and strafe, pushing further walks faster.
 // Pointer events, so a finger, a pen or a mouse (e.g. a phone-sized desktop window) can all drive it.
 const setupJoystick = () => {
   const base = document.getElementById("joystick");
