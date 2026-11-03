@@ -78,7 +78,7 @@ const createCoffeeTable = () => {
 
 const createRug = () => {
   const rug = new THREE.Mesh(
-    new THREE.PlaneGeometry(3.8 * UNITS_PER_METER, 4.0 * UNITS_PER_METER), // clear of the court
+    new THREE.PlaneGeometry(3.8 * UNITS_PER_METER, 4.0 * UNITS_PER_METER),
     new THREE.MeshStandardMaterial({
       color: 0x9c9384, // warm taupe, softer than the white walls
       roughness: 1,

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { COLORS } from './badmintonDecor.js';
 import { useMobileTextures } from './textureQuality.js';
 
@@ -29,6 +30,10 @@ const GAP = 0.25; // between photos and around the row, in scene units
 const CANVAS_WIDTH = useMobileTextures ? 2048 : 3072;
 const SCREEN_COLOR = '#0d1111';
 const PROJECTOR = { x: -2, y: 8.9, z: 0 }; // hangs from the ceiling, lens toward the right wall
+// The lens, in world space: the projector is turned so its local (0.3, 0, 0.7) lands here
+const LENS = new THREE.Vector3(PROJECTOR.x + 0.7, PROJECTOR.y, PROJECTOR.z - 0.3);
+const BEAM_STRENGTH = 0.06; // how visible the beam is in the air near the lens (0 to 1)
+const ROOM_LIGHT = 2.2; // how strongly the screen's picture lights the room in front of it
 
 const vertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -47,9 +52,12 @@ const fragmentShader = /* glsl */ `
 
   void main() {
     vec3 color = mix(texture2D(mapA, vUv).rgb, texture2D(mapB, vUv).rgb, smoothstep(0.0, 1.0, progress));
-    // Projected light falls off a little toward the corners
+    // A projector can't project black: the darkest it gets is the screen in the room's light, and its
+    // whites are a little softer than a TV's. Map the picture between those.
+    color = mix(vec3(0.07, 0.072, 0.075), vec3(0.93, 0.935, 0.95), color);
+    // Brightest in the middle, falling off toward the corners (the lamp's hot spot)
     vec2 centered = (vUv - 0.5) * vec2(1.0, 1.0 / screenAspect) * 1.6;
-    color *= 1.0 - 0.18 * dot(centered, centered);
+    color *= 1.04 - 0.24 * dot(centered, centered);
     gl_FragColor = vec4(color, 1.0);
   }
 `;
@@ -58,6 +66,9 @@ const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 blank.needsUpdate = true;
 
 let uniforms;
+let roomLight;
+let beamUniforms;
+const glowColor = new THREE.Color(); // the screen's current average colour, for the beam and room light
 let current = blank; // on screen
 let next = null; // loaded and waiting, or null while loading
 let nextIndex = 0;
@@ -100,8 +111,18 @@ const composeSlide = (images) => {
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
+  // The slide's average colour, which the screen throws back into the room
+  const average = document.createElement('canvas');
+  average.width = average.height = 1;
+  const averageCtx = average.getContext('2d');
+  averageCtx.drawImage(canvas, 0, 0, 1, 1);
+  const [r, g, b] = averageCtx.getImageData(0, 0, 1, 1).data;
+  texture.userData.average = new THREE.Color(r / 255, g / 255, b / 255);
   return texture;
 };
+
+const black = new THREE.Color(0, 0, 0);
+const averageOf = (texture) => texture.userData.average ?? black;
 
 const loadNext = () => {
   loading = true;
@@ -181,24 +202,118 @@ const createScreen = () => {
   return group;
 };
 
+// The beam: a faint pyramid of light from the lens to the screen's corners, brightest at the lens and
+// fading out toward the screen, the way projector light shows in the air of a dim room
+const createBeam = () => {
+  const x = SCREEN.x - 0.05;
+  const halfWidth = SCREEN.width / 2;
+  const halfHeight = SCREEN.height / 2;
+  const corners = [
+    [x, SCREEN.centerY + halfHeight, -halfWidth],
+    [x, SCREEN.centerY + halfHeight, halfWidth],
+    [x, SCREEN.centerY - halfHeight, halfWidth],
+    [x, SCREEN.centerY - halfHeight, -halfWidth],
+  ];
+  const positions = [];
+  const along = []; // 0 at the lens, 1 at the screen
+  const across = []; // 0 and 1 at a face's two long edges, so the light fades out softly at the sides
+  corners.forEach((corner, i) => {
+    if (i === 0) return; // no top face: it runs just under the ceiling and showed as a flat grey sheet
+    const next = corners[(i + 1) % 4];
+    positions.push(...LENS.toArray(), ...corner, ...next);
+    along.push(0, 1, 1);
+    across.push(0.5, 0, 1);
+  });
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('along', new THREE.Float32BufferAttribute(along, 1));
+  geometry.setAttribute('across', new THREE.Float32BufferAttribute(across, 1));
+
+  beamUniforms = { color: { value: new THREE.Color(1, 1, 1) }, strength: { value: BEAM_STRENGTH } };
+  return new THREE.Mesh(
+    geometry,
+    new THREE.ShaderMaterial({
+      uniforms: beamUniforms,
+      vertexShader: /* glsl */ `
+        attribute float along;
+        attribute float across;
+        varying float vAlong;
+        varying float vAcross;
+        void main() {
+          vAlong = along;
+          vAcross = across;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: /* glsl */ `
+        uniform vec3 color;
+        uniform float strength;
+        varying float vAlong;
+        varying float vAcross;
+        void main() {
+          float fade = pow(1.0 - vAlong, 2.2) + 0.08 * (1.0 - vAlong);
+          // across is interpolated toward 0.5 near the lens, so this only softens the far edges
+          fade *= smoothstep(0.0, 0.25, vAcross) * smoothstep(1.0, 0.75, vAcross);
+          gl_FragColor = vec4(color * strength * fade, 1.0);
+        }
+      `,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    })
+  );
+};
+
+// Soft round glow for the lens
+const lensGlowTexture = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  gradient.addColorStop(0.15, 'rgba(235, 243, 255, 0.8)');
+  gradient.addColorStop(0.45, 'rgba(200, 220, 255, 0.18)');
+  gradient.addColorStop(1, 'rgba(200, 220, 255, 0)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(canvas);
+};
+
 const createProjector = () => {
   const group = new THREE.Group();
   const body = new THREE.Mesh(
     new THREE.BoxGeometry(1.4, 0.5, 1.1),
     new THREE.MeshStandardMaterial({ color: 0x2b3131, roughness: 0.45, metalness: 0.2 })
   );
+  // Lens barrel with dark glass, a bright core where the light comes out, and its glow
   const lens = new THREE.Mesh(
     new THREE.CylinderGeometry(0.2, 0.22, 0.2, 24),
-    new THREE.MeshBasicMaterial({ color: COLORS.cream })
+    new THREE.MeshStandardMaterial({ color: 0x1a1d1d, roughness: 0.3, metalness: 0.6 })
   );
   lens.rotation.x = Math.PI / 2;
   lens.position.set(0.3, 0, 0.6);
+  const glassFace = new THREE.Mesh(new THREE.CircleGeometry(0.16, 24), new THREE.MeshBasicMaterial({ color: 0x9fb4c4 }));
+  glassFace.position.set(0.3, 0, 0.701);
+  const core = new THREE.Mesh(new THREE.CircleGeometry(0.07, 24), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  core.position.set(0.3, 0, 0.703);
+  const glow = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: lensGlowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.85 })
+  );
+  glow.scale.setScalar(1.1);
+  glow.position.set(0.3, 0, 0.78);
+  // Vents on the side and a little blue power light
+  const vents = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.25), new THREE.MeshStandardMaterial({ color: 0x151818, roughness: 0.9 }));
+  vents.rotation.y = -Math.PI / 2;
+  vents.position.set(-0.701, 0, 0);
+  const led = new THREE.Mesh(new THREE.CircleGeometry(0.025, 12), new THREE.MeshBasicMaterial({ color: 0x4fa8ff }));
+  led.position.set(-0.4, 0.1, 0.551);
   const mount = new THREE.Mesh(
     new THREE.CylinderGeometry(0.06, 0.06, 10 - PROJECTOR.y, 8),
     new THREE.MeshStandardMaterial({ color: 0x2b3131, roughness: 0.5 })
   );
   mount.position.y = (10 - PROJECTOR.y) / 2;
-  group.add(body, lens, mount);
+  group.add(body, lens, glassFace, core, glow, vents, led, mount);
   group.position.set(PROJECTOR.x, PROJECTOR.y, PROJECTOR.z);
   group.rotation.y = Math.PI / 2; // lens (local +z) toward the right wall (+x)
 
@@ -206,8 +321,28 @@ const createProjector = () => {
 };
 
 export const setupProjector = (scene) => {
-  scene.add(createScreen(), createProjector());
+  // The picture's light thrown back into the room, tinted by what's on screen
+  RectAreaLightUniformsLib.init();
+  roomLight = new THREE.RectAreaLight(0xffffff, 0, SCREEN.width, SCREEN.height);
+  roomLight.position.set(SCREEN.x - 0.1, SCREEN.centerY, 0);
+  roomLight.lookAt(0, SCREEN.centerY, 0);
+  scene.add(createScreen(), createProjector(), createBeam(), roomLight);
   loadNext();
+};
+
+// Beam and room light follow the screen's average colour, blending with the crossfade
+const updateGlow = (fromTexture, toTexture, amount) => {
+  glowColor.copy(averageOf(fromTexture)).lerp(averageOf(toTexture), amount);
+  roomLight.color.copy(glowColor);
+  roomLight.intensity = ROOM_LIGHT;
+  // The beam is mostly the lamp's white, tinted a little by the picture
+  const brightness = Math.max(glowColor.r, glowColor.g, glowColor.b, 0.001);
+  beamUniforms.color.value.setRGB(1, 1, 1).lerp(glowColor.clone().multiplyScalar(1 / brightness), 0.35);
+};
+
+const smoothstepProgress = () => {
+  const t = uniforms.progress.value;
+  return t * t * (3 - 2 * t);
 };
 
 // Called every frame from the render loop
@@ -228,6 +363,7 @@ export const updateProjector = (delta) => {
   }
 
   uniforms.progress.value = Math.min(elapsed / FADE_TIME, 1);
+  updateGlow(uniforms.mapA.value, uniforms.mapB.value, smoothstepProgress());
   if (elapsed >= FADE_TIME) {
     if (current !== blank) current.dispose(); // keep only what's on screen in memory
     current = next;

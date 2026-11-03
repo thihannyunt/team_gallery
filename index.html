@@ -9,6 +9,10 @@
 
     <title>Court Connect Crew · Meet our team in 3D</title>
     <meta name="theme-color" content="#024b4a" />
+    <!-- Opened from the home screen, the page fills the whole screen (iPhones can't go full screen in Safari) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -116,6 +120,7 @@
           <p><b>P:</b> Stop music</p>
           <p><b>V:</b> Switch 1st / 3rd person</p>
           <p><b>E:</b> Sit down / stand up</p>
+          <p><b>F:</b> Full screen</p>
         </div>
         <div class="touch-help">
           <p><b>Joystick:</b> Move around</p>
@@ -124,6 +129,7 @@
           <p><b>☰ Menu:</b> Show Menu</p>
           <p><b>👁:</b> Switch 1st / 3rd person</p>
           <p><b>🔊:</b> Music on / off</p>
+          <p><b>⛶:</b> Full screen</p>
         </div>
       </div>
     </div>
@@ -134,6 +140,11 @@
       <button id="music_toggle" aria-label="Play music" aria-pressed="false">
         <span class="music-icon" aria-hidden="true">🔇</span>
         <span class="button-label">Play Music</span>
+      </button>
+      <!-- Shown only where the browser can go full screen (modules/fullscreen.js) -->
+      <button id="fullscreen_toggle" aria-label="Full screen" aria-pressed="false" hidden>
+        <span class="music-icon" aria-hidden="true">⛶</span>
+        <span class="button-label">Full Screen</span>
       </button>
       <button id="help_button" aria-label="Show controls" aria-expanded="false">!</button>
     </div>

@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import { about } from './teamData.js';
 
-// "Contact us" whiteboard on the front wall, to the right of the team portrait: an aluminium-framed
+// "Contact us" whiteboard on the back wall, between the exit door and the corner speaker: an aluminium-framed
 // board with our email, website, LINE and sign-off written in marker, plus a marker tray along the bottom.
 // The contact details come from teamData.js, so the board always matches the About page.
 // The writing is drawn in code on a canvas, so it needs no download.
 
 const BOARD = { width: 9.4, height: 5.8 }; // the writing surface
 const FRAME = 0.14;
-const CENTER = { x: 4.5, y: 2.3, z: -19.95 }; // front wall stands at z = -20
+const CENTER = { x: 15.1, y: 3.1, z: 19.95 }; // back wall stands at z = 20
+const SCALE = 0.8; // under full size, to leave room beside the exit door and clear the speaker below
 
 const outerWidth = BOARD.width + 2 * FRAME;
 const outerHeight = BOARD.height + 2 * FRAME;
@@ -16,9 +17,9 @@ const outerHeight = BOARD.height + 2 * FRAME;
 // For lighting.js: a ceiling track light gives the board the same pool of light as the photos
 export const contactBoardLight = {
   center: new THREE.Vector3(CENTER.x, CENTER.y, CENTER.z),
-  normal: new THREE.Vector3(0, 0, 1),
-  width: outerWidth,
-  height: outerHeight,
+  normal: new THREE.Vector3(0, 0, -1),
+  width: outerWidth * SCALE,
+  height: outerHeight * SCALE,
 };
 
 const MARKER = { navy: '#1f3c88', teal: '#0b5d5b', red: '#c63a2f', green: '#2e8540' };
@@ -147,7 +148,7 @@ const write = (ctx, w, h) => {
     { draw: drawEnvelope, label: 'Email', text: about.email, color: MARKER.navy },
     { draw: drawGlobe, label: 'Web', text: about.appUrl.replace(/^https?:\/\//, ''), color: MARKER.navy },
     { draw: drawLineLogo, label: 'LINE', text: about.lineUrl.replace(/^https?:\/\//, ''), color: MARKER.green },
-    { draw: drawSpeechBubble, text: 'Questions, ideas, a session to organise? Say hi!', color: MARKER.teal },
+    { draw: drawSpeechBubble, text: 'Want a 3D space like this for your business? Contact us!', color: MARKER.teal },
   ].forEach(({ draw, label, text, color }, i) => {
     const y = 560 + i * 160;
     ctx.strokeStyle = color;
@@ -304,5 +305,7 @@ export const createContactBoard = (scene) => {
 
   group.add(surface, createTray());
   group.position.set(CENTER.x, CENTER.y, CENTER.z);
+  group.rotation.y = Math.PI; // face into the room
+  group.scale.setScalar(SCALE);
   scene.add(group);
 };

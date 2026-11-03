@@ -46,15 +46,16 @@ const UNITS_PER_INCH = 0.14;
 // `frame` is the finish of the shared thin frame profile: 'oak' (natural wood) or 'black' (matte metal).
 // A wall without a `title` gets no wall label.
 // The right wall holds the "Team Activities" projector screen (projector.js) and the front wall's
-// "Contact us" whiteboard hangs to the right of the team portrait (contactBoard.js).
+// "Contact us" whiteboard hangs on the back wall beside the exit door (contactBoard.js) and the mini bar
+// stands to the right of the team portrait (miniBar.js).
 const walls = [
   {
-    // The team portrait, with the contact whiteboard beside it (no wall label)
+    // The team portrait, with the mini bar beside it (no wall label)
     layout: statementSatellites,
     layoutOptions: { anchor: [36, 36] }, // square anchor to match the square team portrait
     frame: 'oak',
     photos: ['cooperate_team_portrait'],
-    origin: { x: -8, z: -19.5 }, // Front Wall, left of center
+    origin: { x: -10.5, z: -19.5 }, // Front Wall, left of the mini bar
     rotationY: 0,
   },
   {
@@ -75,7 +76,7 @@ const walls = [
     layoutOptions: { frame: [20, 25], gap: 8 },
     frame: 'black',
     photos: ['four_people', 'arkar', 'abp_eye'],
-    origin: { x: 0, z: 19.5 }, // Back Wall
+    origin: { x: -10.8, z: 19.5 }, // Back Wall, toward the left corner (the music corner has the middle)
     rotationY: Math.PI,
   },
 ];

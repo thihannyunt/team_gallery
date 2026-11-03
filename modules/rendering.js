@@ -5,6 +5,7 @@ import { updatePaintingDetail } from "./paintingDetail.js";
 import { updateProjector } from "./projector.js";
 import { updateSeating } from "./seating.js";
 import { updateExitDoor } from "./exitDoor.js";
+import { updateArcade } from "./arcade.js";
 
 export const setupRendering = (
   scene,
@@ -29,6 +30,7 @@ export const setupRendering = (
     updatePlayerView(delta);
     updatePaintingDetail(paintings, camera.position);
     updateProjector(delta);
+    updateArcade(delta);
 
     renderer.render(scene, getViewCamera());
     requestAnimationFrame(render);

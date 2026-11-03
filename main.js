@@ -27,6 +27,10 @@ import { createLounge } from "./modules/lounge.js";
 import { setupAboutPage } from "./modules/aboutPage.js";
 import { setupSeating } from "./modules/seating.js";
 import { setupExitDoor } from "./modules/exitDoor.js";
+import { setupFullscreen } from "./modules/fullscreen.js";
+import { createArcade } from "./modules/arcade.js";
+import { createMiniBar } from "./modules/miniBar.js";
+import { createMusicCorner, musicCornerLights } from "./modules/musicCorner.js";
 
 setupIntroVideo(); // first, so the landing video buffers while the gallery is built
 
@@ -41,10 +45,17 @@ const walls = createWalls(scene, textureLoader);
 const floor = setupFloor(scene);
 const ceiling = createCeiling(scene, textureLoader);
 const paintings = createPaintings(scene, textureLoader);
-const lighting = setupLighting(scene, paintings, [contactBoardLight]);
+const lighting = setupLighting(scene, paintings, [contactBoardLight, ...musicCornerLights]);
 
 // The decor's solid pieces join the walls so the player can't walk through them
-walls.add(...createBadmintonDecor(scene), ...createLounge(scene), ...setupMusic(scene, camera));
+walls.add(
+  ...createBadmintonDecor(scene),
+  ...createLounge(scene),
+  ...setupMusic(scene, camera),
+  ...createArcade(scene),
+  ...createMiniBar(scene),
+  ...createMusicCorner(scene)
+);
 
 setupProjector(scene);
 
@@ -80,3 +91,5 @@ loadBenchModel(scene);
 loadCeilingLampModel(scene);
 
 setupVR(renderer);
+
+setupFullscreen();

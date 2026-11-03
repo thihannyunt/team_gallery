@@ -16,7 +16,7 @@ const SPEAKERS = [
 const VOLUME = 0.6;
 const HEARING_DISTANCE = 10; // full volume within this many units of a speaker, softer further away
 const FADE_TIME = 1.2; // seconds to fade in or out
-const START_ON_ENTER = true; // the "Meet our team in 3D" click counts as the user gesture browsers need for sound
+const START_ON_ENTER = true; // entering the gallery (a click, tap or Enter) counts as the gesture browsers need for sound
 
 let listener;
 let jazz;
@@ -98,11 +98,8 @@ export const setupMusic = (scene, camera) => {
     return collider(x, z, 1.2, 1.2);
   });
 
-  if (START_ON_ENTER) {
-    document.getElementById('play_button').addEventListener('click', () => {
-      if (!stoppedByUser) startAudio();
-    });
-  }
+  // Phones on silent still play the music, like the landing video does (Safari 17+)
+  if (navigator.audioSession) navigator.audioSession.type = 'playback';
 
   return colliders;
 };
@@ -136,6 +133,11 @@ export const startAudio = () => {
   jazz.start();
   fadeTo(ducked ? 0 : 1);
   updateMusicButton();
+};
+
+// Called by menu.js each time the visitor enters the gallery: music on, unless they turned it off
+export const startAudioOnEnter = () => {
+  if (START_ON_ENTER && !stoppedByUser) startAudio();
 };
 
 export const stopAudio = () => {

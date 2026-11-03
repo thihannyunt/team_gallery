@@ -1,10 +1,12 @@
 import { playIntroVideo, pauseIntroVideo } from './introVideo.js';
+import { startAudioOnEnter } from './music.js';
 
 export const hideMenu = () => {
   const menu = document.getElementById('menu');
   menu.style.display = 'none'; // Hide the menu
   document.body.classList.add('exploring'); // Show the on-screen touch controls (in touch mode)
   pauseIntroVideo();
+  startAudioOnEnter();
 };
 
 export const showMenu = () => {

@@ -1,6 +1,7 @@
 import { keysPressed } from "./movement.js"; // import the keysPressed object
 import { showMenu, hideMenu } from "./menu.js"; // import the showMenu function
 import { startAudio, stopAudio } from "./music.js";
+import { toggleFullscreen } from "./fullscreen.js";
 
 let lockPointer = true;
 let showMenuOnUnlock = false;
@@ -97,6 +98,10 @@ function onKeyDown(event, controls) {
     showMenuOnUnlock = true;
     controls.unlock(); // unlock the pointer
     lockPointer = false;
+  }
+
+  if (event.key === "f") {
+    toggleFullscreen();
   }
 
   if (event.key === "r") {

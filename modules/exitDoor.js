@@ -6,7 +6,7 @@ import { keysPressed } from './movement.js';
 // Exit door on the back wall, near where visitors start, under a glowing green EXIT sign. Walking
 // into it asks the visitor to confirm, then leaves the gallery for the Court Connect site.
 
-const DOOR = { x: 8.5, width: 1.0 * UNITS_PER_METER, height: 2.1 * UNITS_PER_METER };
+const DOOR = { x: 7.6, width: 1.0 * UNITS_PER_METER, height: 2.1 * UNITS_PER_METER };
 const WALL_Z = 20; // back wall
 const TRIGGER_DEPTH = 1.6; // how close to the wall (scene units) counts as walking through
 const STEP_BACK = 1.5; // the visitor is moved this far off the doormat while asked, so "Stay" doesn't ask again
