@@ -48,12 +48,21 @@
 
     <!-- Landing page: just the buttons, floating over the gallery walk-through video. The welcome text
          and the credit to Emilian Kasemi's open-source 3D Art Gallery live on the About page. -->
+    <!-- Title at the top of the landing page, the same brand mark and wording as the video's closing title -->
+    <header id="landing-title">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#024b4a" />
+        <path fill="#f6f4ef" d="M16 7 22 19H10l6-12Z" />
+        <ellipse cx="16" cy="22.5" fill="#c9a227" rx="5" ry="2.5" />
+      </svg>
+      <h1>Court Connect <span>Crew</span></h1>
+      <p>Step inside. Meet the team.</p>
+    </header>
+
     <div id="menu">
-      <div id="play_button" role="button" tabindex="0">MEET OUR TEAM IN 3D</div>
+      <div id="play_button" role="button" tabindex="0">EXPLORE OUR 3D WORLD</div>
       <div class="menu-secondary">
         <button id="about_button">ABOUT</button>
-        <button id="touch_toggle">TOUCH CONTROLS: OFF</button>
-        <button id="intro-sound" aria-label="Video sound" aria-pressed="false"></button>
       </div>
     </div>
 

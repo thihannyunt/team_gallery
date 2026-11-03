@@ -3,7 +3,6 @@ import { touchInput } from "./movement.js";
 import { showMenu } from "./menu.js";
 import { openPaintingAt } from "./clickHandling.js";
 
-const STORAGE_KEY = "touchControls"; // remembers the manual on/off override from the menu
 const LOOK_SPEED = 0.005; // radians the camera turns per pixel dragged
 const DEAD_ZONE = 0.15; // joystick pushes smaller than this (0 to 1) are ignored
 const ARROW_THRESHOLD = 0.35; // how far toward a direction the joystick must be pushed to light its arrow
@@ -16,7 +15,6 @@ const euler = new THREE.Euler(0, 0, 0, "YXZ"); // same rotation order PointerLoc
 let enabled = false;
 let joystickPointerId = null;
 let lookPointer = null;
-let choseManually = false; // the visitor used the menu's TOUCH CONTROLS button during this visit
 
 // Phone and tablet sized screens get the joystick, whatever the browser says about itself
 const TOUCH_SIZED_SCREEN = window.matchMedia("(max-width: 1024px)");
@@ -30,22 +28,6 @@ const isTouchDevice = () =>
   window.matchMedia("(pointer: coarse)").matches ||
   /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
   (navigator.maxTouchPoints > 0 && window.matchMedia("(hover: none)").matches);
-
-const readOverride = () => {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-};
-
-const saveOverride = (on) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
-  } catch {
-    // storage blocked (private mode etc.), the choice just won't be remembered
-  }
-};
 
 // Touch controls only react while the gallery is being explored, not while the menu is open
 const isActive = () => enabled && document.body.classList.contains("exploring");
@@ -75,7 +57,6 @@ export const resetTouchInput = () => {
 const setTouchMode = (on) => {
   enabled = on;
   document.body.classList.toggle("touch-mode", on);
-  document.getElementById("touch_toggle").innerText = `TOUCH CONTROLS: ${on ? "ON" : "OFF"}`;
   resetTouchInput();
 };
 
@@ -200,22 +181,12 @@ export const setupTouchControls = (renderer, camera, paintings) => {
     showMenu();
   });
 
-  document.getElementById("touch_toggle").addEventListener("click", () => {
-    choseManually = true;
-    setTouchMode(!enabled);
-    saveOverride(enabled);
-  });
-
-  // Phones and tablets always start with the joystick: without a keyboard there's no other way to walk.
-  // A remembered "on" still turns it on for desktops; turning it off on a phone lasts for this visit only.
-  const detectTouchMode = () => setTouchMode(isTouchDevice() || readOverride() === "on");
+  // Phones and tablets always get the joystick: without a keyboard there's no other way to walk
+  const detectTouchMode = () => setTouchMode(isTouchDevice());
   detectTouchMode();
 
-  // Resizing a desktop window down to phone or tablet size (or back) switches the joystick on (or off),
-  // unless the visitor already picked with the menu button
-  TOUCH_SIZED_SCREEN.addEventListener("change", () => {
-    if (!choseManually) detectTouchMode();
-  });
+  // Resizing a desktop window down to phone or tablet size (or back) switches the joystick on (or off)
+  TOUCH_SIZED_SCREEN.addEventListener("change", detectTouchMode);
 
   if (enabled) {
     // the controls help panel takes up too much of a small screen, start it collapsed

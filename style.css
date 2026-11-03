@@ -188,6 +188,59 @@ body.exploring #intro-video {
   visibility: hidden;
 }
 
+/* Landing title, floating over the top of the video. Smaller than the video's own closing title so
+   the gallery behind it stays in view: up to 64px on a desktop, 28px on a phone. */
+
+#landing-title {
+  position: fixed;
+  top: calc(20px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 0 16px;
+  text-align: center;
+  font-size: clamp(28px, min(4.4vw, 8.5vh), 64px);
+  pointer-events: none; /* drags and taps go through to the video and menu */
+  animation: fadeInSlideUp 0.6s ease-out;
+}
+
+#landing-title svg {
+  display: block;
+  width: 0.7em;
+  height: 0.7em;
+  margin: 0 auto;
+  border-radius: 0.15em;
+  box-shadow: 0 0 0 2px rgba(246, 244, 239, 0.22);
+}
+
+#landing-title h1 {
+  margin: 0.15em 0 0.1em;
+  font-size: 1em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  /* Dark teal reads on the cream walls and white photo backgrounds that fill the top of most shots;
+     the soft cream glow keeps it readable where the video is dark */
+  color: var(--cc-teal-deep);
+  text-shadow: 0 0 2px rgba(246, 244, 239, 0.95), 0 0 8px rgba(246, 244, 239, 0.8), 0 0 20px rgba(246, 244, 239, 0.85);
+}
+
+#landing-title h1 span {
+  color: #9a7b10; /* the brand gold, darkened to stand out from the cream walls */
+}
+
+#landing-title p {
+  margin: 0;
+  font-size: max(13px, 0.32em);
+  font-weight: 700;
+  color: var(--cc-teal-deep);
+  text-shadow: 0 0 2px rgba(246, 244, 239, 0.95), 0 0 6px rgba(246, 244, 239, 0.85), 0 0 14px rgba(246, 244, 239, 0.9);
+}
+
+body.exploring #landing-title {
+  display: none;
+}
+
 /* Start menu: just the buttons, floating over the bottom of the video */
 
 #menu {
@@ -235,17 +288,16 @@ body.exploring #intro-video {
   gap: 0.6em;
 }
 
-#about_button,
-#touch_toggle,
-#intro-sound {
+/* Small "About" pill centred under the main button */
+#about_button {
   background-color: var(--cc-ink-glass);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   color: var(--cc-cream);
   border: 1px solid rgba(246, 244, 239, 0.35);
   border-radius: 999px;
-  padding: 0.55em 1.25em;
-  font-size: 0.8em;
+  padding: 0.5em 1.4em;
+  font-size: 0.75em;
   font-weight: 700;
   letter-spacing: 0.08em;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -253,18 +305,9 @@ body.exploring #intro-video {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-#about_button:hover,
-#touch_toggle:hover,
-#intro-sound:hover {
+#about_button:hover {
   background-color: rgba(13, 17, 17, 0.94);
   border-color: rgba(246, 244, 239, 0.6);
-}
-
-/* Muted video: the sound button stands out so visitors know there's audio to turn on */
-#intro-sound[aria-pressed="false"] {
-  background-color: var(--cc-lime);
-  border-color: var(--cc-lime);
-  color: var(--cc-ink);
 }
 
 @keyframes fadeInSlideUp {

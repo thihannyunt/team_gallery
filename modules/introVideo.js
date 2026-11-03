@@ -2,23 +2,15 @@ import { setMusicDucked } from './music.js';
 
 // The landing page plays a walk-through of the gallery (public/video/) behind the menu, with sound.
 // Browsers only allow sound once the visitor has interacted with the page, so if it's blocked the
-// video starts muted and unmutes on the first tap, click or key press, unless the visitor turned the
-// sound off with the button. Entering the gallery pauses it; opening the menu again resumes it.
+// video starts muted and unmutes on the first tap, click or key press. Entering the gallery pauses it;
+// opening the menu again resumes it.
 
 let video;
-let soundButton;
 let active = false; // the menu is open, so the video should be playing
-let wantsSound = true;
 
-const updateSoundButton = () => {
-  const on = !video.muted;
-  soundButton.textContent = on ? '🔊 SOUND ON' : '🔇 TAP FOR SOUND';
-  soundButton.setAttribute('aria-pressed', String(on));
-};
-
-// Plays with sound when wanted and allowed, otherwise muted
+// Plays with sound when allowed, otherwise muted
 const play = async () => {
-  video.muted = !wantsSound;
+  video.muted = false;
   try {
     await video.play();
   } catch {
@@ -44,18 +36,10 @@ export const pauseIntroVideo = () => {
 
 export const setupIntroVideo = () => {
   video = document.getElementById('intro-video');
-  soundButton = document.getElementById('intro-sound');
-  video.addEventListener('volumechange', updateSoundButton);
-  updateSoundButton();
-
-  soundButton.addEventListener('click', () => {
-    wantsSound = video.muted;
-    play();
-  });
 
   // The first interaction with the page is what lets the browser play sound
-  const unlockSound = (event) => {
-    if (!active || !wantsSound || !video.muted || soundButton.contains(event.target)) return;
+  const unlockSound = () => {
+    if (!active || !video.muted) return;
     if (navigator.userActivation && !navigator.userActivation.isActive) return; // e.g. a touch that hasn't lifted yet
     play();
   };
