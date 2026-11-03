@@ -9,6 +9,8 @@ const ARROW_THRESHOLD = 0.35; // how far toward a direction the joystick must be
 const TAP_MAX_MOVE = 10; // pixels a finger can drift and still count as a tap
 const TAP_MAX_TIME = 300; // milliseconds a finger can stay down and still count as a tap
 const ROTATE_TOAST_TIME = 6000; // milliseconds the "turn your phone sideways" reminder stays up
+const HINTS_KEY = "touchHints"; // "done" once the visitor has both swiped to look and walked
+const LOOK_HINT_DISTANCE = 60; // pixels a drag must cover to count as having tried looking around
 
 const euler = new THREE.Euler(0, 0, 0, "YXZ"); // same rotation order PointerLockControls uses
 
@@ -31,6 +33,28 @@ const isTouchDevice = () =>
 
 // Touch controls only react while the gallery is being explored, not while the menu is open
 const isActive = () => enabled && document.body.classList.contains("exploring");
+
+// First-visit hints (index.html #look-hint, #move-hint): shown while the body has hint-look / hint-move.
+// Each fades once the visitor has tried that gesture; after both, they stay away on later visits too.
+const hintsDone = () => {
+  try {
+    return localStorage.getItem(HINTS_KEY) === "done";
+  } catch {
+    return false;
+  }
+};
+
+const finishHint = (name) => {
+  const classes = document.body.classList;
+  if (!classes.contains(`hint-${name}`)) return;
+  classes.remove(`hint-${name}`);
+  if (classes.contains("hint-look") || classes.contains("hint-move")) return;
+  try {
+    localStorage.setItem(HINTS_KEY, "done");
+  } catch {
+    // storage blocked (private mode etc.), the hints just show again next visit
+  }
+};
 
 // Lights the joystick's forward/back/left/right arrows that match the current push
 const highlightArrows = () => {
@@ -83,6 +107,7 @@ const setupJoystick = () => {
     touchInput.right = strength < DEAD_ZONE ? 0 : dx / maxDistance;
     touchInput.forward = strength < DEAD_ZONE ? 0 : -dy / maxDistance; // screen y points down
     highlightArrows();
+    if (strength >= DEAD_ZONE) finishHint("move");
   };
 
   base.addEventListener("pointerdown", (event) => {
@@ -132,6 +157,9 @@ const setupLook = (canvas, camera, paintings) => {
 
     lookPointer.x = event.clientX;
     lookPointer.y = event.clientY;
+    if (Math.hypot(event.clientX - lookPointer.startX, event.clientY - lookPointer.startY) > LOOK_HINT_DISTANCE) {
+      finishHint("look");
+    }
   });
 
   canvas.addEventListener("pointerup", (event) => {
@@ -180,6 +208,8 @@ export const setupTouchControls = (renderer, camera, paintings) => {
     resetTouchInput();
     showMenu();
   });
+
+  if (!hintsDone()) document.body.classList.add("hint-look", "hint-move");
 
   // Phones and tablets always get the joystick: without a keyboard there's no other way to walk
   const detectTouchMode = () => setTouchMode(isTouchDevice());

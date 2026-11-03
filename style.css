@@ -940,6 +940,168 @@ body.touch-mode button {
   pointer-events: none;
 }
 
+/* First-visit hints (touchControls.js): hand-drawn gestures over the gallery, shown while the body has
+   hint-look / hint-move, i.e. until the visitor has swiped to look and pushed the joystick */
+
+.touch-hint,
+.joystick-ghost {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* swipes go straight through to the scene */
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+body.hint-look #look-hint,
+body.hint-move #move-hint,
+body.hint-move .joystick-ghost {
+  opacity: 1;
+  visibility: visible;
+}
+
+.touch-hint p {
+  margin: 0;
+  padding: 2px 14px 4px;
+  border-radius: 999px;
+  background-color: var(--cc-ink-glass);
+  color: var(--cc-cream);
+  font-family: Caveat, "Comic Sans MS", cursive; /* loaded in index.html */
+  font-size: 22px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.touch-hint svg {
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7)); /* keeps the lime lines visible on the cream walls */
+}
+
+/* Lines draw themselves in like a pen sketch */
+.touch-hint .sketch {
+  fill: none;
+  stroke: var(--cc-lime);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+body.touch-mode.exploring.hint-look #look-hint .sketch,
+body.touch-mode.exploring.hint-move #move-hint .sketch {
+  animation: sketch-in 0.9s ease-out 0.3s forwards;
+}
+
+@keyframes sketch-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* A fingertip: a solid dot with a ring around it */
+.hint-finger {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  background-color: rgba(246, 244, 239, 0.9);
+  box-shadow: 0 0 0 7px rgba(246, 244, 239, 0.3), 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Swipe hint, in the open part of the screen away from the joystick */
+#look-hint {
+  position: fixed;
+  top: 42%;
+  left: 60%;
+  width: 220px;
+  margin-left: -110px;
+  z-index: 2;
+  text-align: center;
+}
+
+@media (orientation: portrait) {
+  #look-hint {
+    left: 50%;
+  }
+}
+
+#look-hint .hint-finger {
+  left: 50%;
+  top: 74px;
+  animation: hint-swipe 2.4s ease-in-out infinite;
+}
+
+#look-hint p {
+  display: inline-block;
+  margin-top: 26px;
+}
+
+@keyframes hint-swipe {
+  0%,
+  100% {
+    transform: translateX(-70px);
+  }
+  50% {
+    transform: translateX(70px);
+  }
+}
+
+/* Joystick hint: a note above the pad with an arrow down to it */
+#move-hint {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+#move-hint svg {
+  width: 60px;
+  height: 44px;
+  margin: 2px auto 0;
+}
+
+/* ...and a ghost finger pushing the knob forward, right, back and left */
+.joystick-ghost {
+  left: 50%;
+  top: 50%;
+}
+
+body.hint-move .joystick-ghost {
+  animation: hint-pad 4s ease-in-out infinite;
+}
+
+@keyframes hint-pad {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  12% {
+    transform: translate(0, -150%);
+  }
+  25%,
+  37% {
+    transform: translate(150%, 0);
+  }
+  50%,
+  62% {
+    transform: translate(0, 150%);
+  }
+  75%,
+  87% {
+    transform: translate(-150%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #look-hint .hint-finger,
+  body.hint-move .joystick-ghost {
+    animation: none;
+  }
+}
+
 /* Forward / back / left / right arrows around the knob */
 .joystick-arrows {
   position: absolute;
