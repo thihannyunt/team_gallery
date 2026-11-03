@@ -6,6 +6,7 @@ import { updateProjector } from "./projector.js";
 import { updateSeating } from "./seating.js";
 import { updateExitDoor } from "./exitDoor.js";
 import { updateArcade } from "./arcade.js";
+import { updatePhotoPrompt } from "./photoPrompt.js";
 
 export const setupRendering = (
   scene,
@@ -23,6 +24,7 @@ export const setupRendering = (
     updateSeating(); // before movement, so starting to walk gets you up from a seat first
     updateMovement(delta, controls, camera, walls);
     updateExitDoor();
+    updatePhotoPrompt();
 
     renderer.gammaOutput = true;
     renderer.gammaFactor = 2.2;

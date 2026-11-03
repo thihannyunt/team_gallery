@@ -571,9 +571,11 @@ body.exploring #landing-title {
   background-color: rgba(246, 244, 239, 0.08);
 }
 
-/* "Sit & watch" / "Stand up" near the lounge seats (see modules/seating.js) */
+/* "Sit & watch" / "Stand up" near the lounge seats (see modules/seating.js), and "View photo" in
+   front of a photo (modules/photoPrompt.js) */
 
-#seat-button {
+#seat-button,
+#photo-button {
   position: fixed;
   left: 50%;
   bottom: calc(28px + env(safe-area-inset-bottom));
@@ -591,8 +593,20 @@ body.exploring #landing-title {
   cursor: pointer;
 }
 
-#seat-button[hidden] {
+#seat-button[hidden],
+#photo-button[hidden] {
   display: none;
+}
+
+#photo-button {
+  animation: photo-button-in 0.25s ease-out;
+}
+
+@keyframes photo-button-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px); /* keeps the horizontal centring while it slides up */
+  }
 }
 
 /* Keyboard shortcut hints, hidden on touch screens */
@@ -928,7 +942,8 @@ body.touch-mode button {
   }
 
   /* Above the centred joystick */
-  body.touch-mode #seat-button {
+  body.touch-mode #seat-button,
+  body.touch-mode #photo-button {
     bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
   }
 }

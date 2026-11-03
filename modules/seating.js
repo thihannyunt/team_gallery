@@ -69,6 +69,9 @@ const showButton = (state) => {
   if (state === 'stand') element.innerHTML = 'Stand up<span class="key-hint"> · E</span>';
 };
 
+// Whether E means sit down / stand up right now (photoPrompt.js uses E for photos otherwise)
+export const canSit = () => Boolean(seat || nearest);
+
 export const setupSeating = (playerCamera) => {
   camera = playerCamera;
   button().addEventListener('click', toggle);

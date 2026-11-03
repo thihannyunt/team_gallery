@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { openPhotoViewer } from './photoViewer.js';
 import { getViewCamera } from './playerView.js';
+import { isWithinReach } from './photoPrompt.js';
 
 const mouse = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
@@ -40,7 +41,8 @@ function onClick(paintings) {
       painting = painting.parent;
     }
 
-    openPhotoViewer(painting.userData.info);
+    // Only up close, the same reach as the "View photo" button: walk over to a photo to open it
+    if (isWithinReach(painting)) openPhotoViewer(painting.userData.info);
   }
 }
 

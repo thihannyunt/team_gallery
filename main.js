@@ -28,6 +28,7 @@ import { setupAboutPage } from "./modules/aboutPage.js";
 import { setupSeating } from "./modules/seating.js";
 import { setupExitDoor } from "./modules/exitDoor.js";
 import { setupFullscreen } from "./modules/fullscreen.js";
+import { setupPhotoPrompt } from "./modules/photoPrompt.js";
 import { createArcade } from "./modules/arcade.js";
 import { createMiniBar } from "./modules/miniBar.js";
 import { createMusicCorner, musicCornerLights } from "./modules/musicCorner.js";
@@ -64,6 +65,8 @@ createContactBoard(scene);
 setupAboutPage();
 
 setupSeating(camera);
+
+setupPhotoPrompt(camera, paintings);
 
 setupExitDoor(scene, camera, controls);
 
