@@ -31,10 +31,18 @@ import { setupFullscreen } from "./modules/fullscreen.js";
 import { setupPhotoPrompt } from "./modules/photoPrompt.js";
 import { setupBarDrinks } from "./modules/barDrinks.js";
 import { setupArcadePlay } from "./modules/arcadePlay.js";
+import { setupRacingPlay } from "./modules/racingPlay.js";
+import { createRacingSim, racingSimLight } from "./modules/racingSim.js";
 import { setupInstrumentPlay } from "./modules/instrumentPlay.js";
+import { setupPianoPlay } from "./modules/pianoPlay.js";
 import { createArcade } from "./modules/arcade.js";
 import { createMiniBar } from "./modules/miniBar.js";
 import { createMusicCorner, musicCornerLights } from "./modules/musicCorner.js";
+import { createGrandPiano } from "./modules/grandPiano.js";
+
+// The grand piano on its corner stage (grandPiano.js, pianoPlay.js); false puts it away without
+// touching its code
+const SHOW_PIANO = true;
 
 setupIntroVideo(); // first, so the landing video buffers while the gallery is built
 
@@ -49,7 +57,7 @@ const walls = createWalls(scene, textureLoader);
 const floor = setupFloor(scene);
 const ceiling = createCeiling(scene, textureLoader);
 const paintings = createPaintings(scene, textureLoader);
-const lighting = setupLighting(scene, paintings, [contactBoardLight, ...musicCornerLights]);
+const lighting = setupLighting(scene, paintings, [contactBoardLight, ...musicCornerLights, racingSimLight]);
 
 // The decor's solid pieces join the walls so the player can't walk through them
 walls.add(
@@ -57,8 +65,10 @@ walls.add(
   ...createLounge(scene),
   ...setupMusic(scene, camera),
   ...createArcade(scene),
+  ...createRacingSim(scene),
   ...createMiniBar(scene),
-  ...createMusicCorner(scene)
+  ...createMusicCorner(scene),
+  ...(SHOW_PIANO ? createGrandPiano(scene, renderer) : [])
 );
 
 setupProjector(scene);
@@ -73,7 +83,9 @@ setupPhotoPrompt(camera, paintings);
 
 setupBarDrinks(scene, camera, controls);
 setupArcadePlay(camera, controls);
+setupRacingPlay(camera, controls);
 setupInstrumentPlay(camera, controls);
+if (SHOW_PIANO) setupPianoPlay(camera, controls);
 
 setupExitDoor(scene, camera, controls);
 

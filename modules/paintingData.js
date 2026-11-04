@@ -1,4 +1,5 @@
 import { statementSatellites, singleRow } from './wallLayouts.js';
+import { ROOM } from './room.js';
 import { people, about } from './teamData.js';
 
 // What the proximity card and photo pop-up say about each member's photos
@@ -44,30 +45,38 @@ const UNITS_PER_INCH = 0.14;
 // `layoutOptions` overrides recipe defaults such as the anchor size or gap; `raise` lifts the whole
 // arrangement (inches) to leave room for name cards underneath; `nameCards` hangs one under each photo.
 // `frame` is the finish of the shared thin frame profile: 'oak' (natural wood) or 'black' (matte metal).
-// A wall without a `title` gets no wall label.
-// The right wall holds the "Team Activities" projector screen (projector.js) and the front wall's
-// "Contact us" whiteboard hangs on the back wall beside the exit door (contactBoard.js) and the mini bar
-// stands to the right of the team portrait (miniBar.js).
+// A wall without a `title` gets no wall label; `labelScale` makes its label bigger than the usual card.
+// The right wall holds the "Team Activities" projector screen (projector.js); the "Contact us" whiteboard
+// hangs on the back wall beside the exit door (contactBoard.js). The front wall has, left to right, the
+// team portrait, the racing simulator (racingSim.js), the Rally Bar (miniBar.js) and the arcade
+// (arcade.js); the guitar and khlui are in the middle of the back wall (musicCorner.js), and the grand piano
+// (grandPiano.js) stands on its stage in the back corner by the crew wall.
 const walls = [
   {
-    // The team portrait, with the mini bar beside it (no wall label)
+    // The team portrait, hung big, with its wall label read from across the room
+    title: 'Our Team',
+    subtitle: 'Rallio',
+    labelScale: 2.4,
     layout: statementSatellites,
-    layoutOptions: { anchor: [36, 36] }, // square anchor to match the square team portrait
+    layoutOptions: { anchor: [72, 72] }, // square anchor to match the square team portrait, hung big
+    raise: 12, // lifted so the big frame clears the floor
     frame: 'oak',
     photos: ['cooperate_team_portrait'],
-    origin: { x: -10.5, z: -19.5 }, // Front Wall, left of the mini bar
+    origin: { x: -22, z: ROOM.front + 0.5 }, // Front Wall, between the crew wall's corner and the racing simulator
     rotationY: 0,
   },
   {
     title: 'Meet the Crew',
     subtitle: 'Tap a portrait for more',
     layout: singleRow,
-    layoutOptions: { frame: [28, 35], gap: 12 },
+    // Sized so all six fit between the piano stage and the front wall, with the wall label clear of the
+    // corner: the row runs from z ≈ 7.6 to -17.4 and the label ends about half a unit short of the corner
+    layoutOptions: { frame: [24, 30], gap: 7 },
     raise: 7,
     nameCards: true,
     frame: 'black',
     photos: ['ko_pyae', 'thn', 'pyae_sone', 'ar_kar', 'abp', 'myat'], // About page order
-    origin: { x: -19.5, z: 0 }, // Left Wall
+    origin: { x: ROOM.left + 0.5, z: -4.9 }, // Left Wall (room.js), toward its front end; the piano stage has the back corner
     rotationY: Math.PI / 2,
   },
   {
@@ -76,7 +85,8 @@ const walls = [
     layoutOptions: { frame: [20, 25], gap: 8 },
     frame: 'black',
     photos: ['four_people', 'arkar', 'abp_eye'],
-    origin: { x: -10.8, z: 19.5 }, // Back Wall, toward the left corner (the music corner has the middle)
+    raise: 10, // above the discussion sofa under them (lounge.js)
+    origin: { x: -13, z: ROOM.back - 0.5 }, // Back Wall, between the piano stage and the music corner
     rotationY: Math.PI,
   },
 ];
@@ -130,10 +140,12 @@ export const paintingData = layouts.flatMap(({ wall, slots }) =>
 // One small wall label per arrangement, hung to the right of it just below the centerline
 export const wallLabelData = layouts.filter(({ wall }) => wall.title).map(({ wall, slots }) => {
   const right = Math.max(...slots.map((s) => s.x + s.width / 2));
+  const scale = wall.labelScale ?? 1;
   return {
     title: wall.title,
     subtitle: wall.subtitle ?? `${TEAM}, ${YEAR}`,
-    position: wallToWorld(wall, right + 1.4, CENTERLINE_Y - 0.6),
+    position: wallToWorld(wall, right + 0.6 + 0.8 * scale, CENTERLINE_Y - 0.6), // a small gap past the frame
     rotationY: wall.rotationY,
+    scale,
   };
 });

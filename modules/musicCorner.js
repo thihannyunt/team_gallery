@@ -1,16 +1,17 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER, CENTERLINE_Y } from './paintingData.js';
 import { COLORS, collider } from './badmintonDecor.js';
+import { ROOM } from './room.js';
 
 // Music corner in the middle of the back wall, between the exit door and the "Behind the Scenes"
-// photos: an electric guitar on
-// a wall hanger, its cable plugged into a small combo amp on the floor, and a wall showcase holding a
+// photos: an electric guitar on a wall hanger, its cable plugged into a small combo amp on the floor, and a wall showcase holding a
 // Thai khlui (bamboo flute). Both can be played (instrumentPlay.js). Modelled in meters (front facing +z,
 // back against the wall at z = 0), then scaled into
 // scene units; built from simple shapes so there's nothing to download.
 
 const U = UNITS_PER_METER;
-const WALL_Z = 20; // back wall
+const WALL_Z = ROOM.back; // back wall
+const INTO_ROOM = -1; // the room is toward -z from the back wall (1 for the front wall)
 const GUITAR = { x: -2.8, hangerHeight: 1.78 }; // hanger height in meters above the floor
 const AMP = { offset: -0.12, width: 0.46, height: 0.42, depth: 0.25 }; // offset along the wall from the guitar
 const SHOWCASE = { x: 2.0, width: 0.86, height: 0.28, depth: 0.11, scale: 1.45 }; // hung larger than life, like the photos
@@ -24,9 +25,9 @@ export const instrumentSpots = {
 // For lighting.js: a ceiling track light on the guitar and one on the khlui, like the photos get
 const guitarCenterY = FLOOR_Y + (GUITAR.hangerHeight - 0.5) * U;
 export const musicCornerLights = [
-  { center: new THREE.Vector3(GUITAR.x, guitarCenterY, WALL_Z - 0.2), width: 0.45 * U, height: 1.0 * U },
-  { center: new THREE.Vector3(SHOWCASE.x, CENTERLINE_Y, WALL_Z - 0.2), width: SHOWCASE.width * SHOWCASE.scale * U, height: SHOWCASE.height * SHOWCASE.scale * U },
-].map((target) => ({ ...target, normal: new THREE.Vector3(0, 0, -1) }));
+  { center: new THREE.Vector3(GUITAR.x, guitarCenterY, WALL_Z + INTO_ROOM * 0.2), width: 0.45 * U, height: 1.0 * U },
+  { center: new THREE.Vector3(SHOWCASE.x, CENTERLINE_Y, WALL_Z + INTO_ROOM * 0.2), width: SHOWCASE.width * SHOWCASE.scale * U, height: SHOWCASE.height * SHOWCASE.scale * U },
+].map((target) => ({ ...target, normal: new THREE.Vector3(0, 0, INTO_ROOM) }));
 
 const chrome = new THREE.MeshStandardMaterial({ color: 0xd8dcdc, roughness: 0.18, metalness: 0.95 });
 const blackPlastic = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.45 });
@@ -410,14 +411,14 @@ export const createMusicCorner = (scene) => {
   const wall = new THREE.Group();
   const guitarWall = createGuitarWall();
   guitarWall.scale.setScalar(U);
-  guitarWall.position.set(GUITAR.x, FLOOR_Y, WALL_Z - 0.02);
+  guitarWall.position.set(GUITAR.x, FLOOR_Y, WALL_Z + INTO_ROOM * 0.02);
   const showcase = createShowcase();
   showcase.scale.setScalar(SHOWCASE.scale * U);
-  showcase.position.set(SHOWCASE.x, CENTERLINE_Y, WALL_Z - 0.02);
+  showcase.position.set(SHOWCASE.x, CENTERLINE_Y, WALL_Z + INTO_ROOM * 0.02);
   wall.add(guitarWall, showcase);
-  wall.children.forEach((child) => (child.rotation.y = Math.PI)); // face into the room
+  wall.children.forEach((child) => (child.rotation.y = INTO_ROOM > 0 ? 0 : Math.PI)); // face into the room
   scene.add(wall);
 
-  const ampX = GUITAR.x - AMP.offset * U; // turned to face the room, the offset runs the other way
-  return [collider(ampX, WALL_Z - (AMP.depth * U) / 2, AMP.width * U + 0.3, AMP.depth * U + 0.6)];
+  const ampX = GUITAR.x + INTO_ROOM * AMP.offset * U; // turned to face the room, the offset turns with it
+  return [collider(ampX, WALL_Z + (INTO_ROOM * AMP.depth * U) / 2, AMP.width * U + 0.3, AMP.depth * U + 0.6)];
 };

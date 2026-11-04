@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { paintingData, wallLabelData } from './paintingData.js';
 import { texturePath } from './textureQuality.js';
 
-// Paintings are positioned 0.5 in front of the walls (walls at ±20, paintings at ±19.5)
+// Paintings are positioned 0.5 in front of the walls (room.js)
 const WALL_OFFSET = -0.49;
 
 // One thin frame profile everywhere (under 1 in at hanging scale); only the finish changes per wall
@@ -244,6 +244,7 @@ export function createPaintings(scene, textureLoader) {
     label.add(createWallLabel(data.title, data.subtitle));
     label.position.set(data.position.x, data.position.y, data.position.z);
     label.rotation.y = data.rotationY;
+    label.scale.set(data.scale, data.scale, 1); // bigger card, still flat on the wall
     scene.add(label);
   });
 

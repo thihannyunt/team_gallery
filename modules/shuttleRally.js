@@ -329,6 +329,7 @@ const GLYPHS = {
   0: '111 101 101 101 111', 1: '010 110 010 010 111', 2: '110 001 010 100 111', 3: '110 001 010 001 110',
   4: '101 101 111 001 001', 5: '111 100 110 001 110', 6: '011 100 111 101 111', 7: '111 001 010 010 010',
   8: '111 101 111 101 111', 9: '111 101 111 001 110', '!': '1 1 1 0 1', ' ': '00 00 00 00 00',
+  ':': '0 1 0 1 0', '.': '0 0 0 0 1', '/': '001 001 010 100 100', '-': '000 000 111 000 000',
 };
 const glyph = (char) => (GLYPHS[char] ?? GLYPHS[' ']).split(' ');
 const textWidth = (words, scale) =>
@@ -346,6 +347,9 @@ const text = (ctx, words, x, y, color, align = 'center', scale = 1) => {
     left += (rows[0].length + 1) * scale;
   });
 };
+
+// The racing simulator's game (racingGame.js) writes with the same font
+export { text as pixelText, textWidth as pixelTextWidth };
 
 // Attract mode: the shuttle flies a high arc from one player to the other every 1.2 s
 export const drawAttract = (ctx, time) => {

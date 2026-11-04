@@ -2,10 +2,12 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { COLORS, collider } from './badmintonDecor.js';
+import { ROOM } from './room.js';
 
 // Living-room corner facing the "Team Activities" projector screen on the right wall: a sofa, two
-// armchairs turned toward the screen, a round coffee table and a rug. Modelled in meters, then
-// scaled into scene units; built from simple shapes so it stays light on phones.
+// armchairs turned toward the screen, a round coffee table and a rug. And a long discussion sofa against
+// the back wall under the "Behind the Scenes" photos, with a low table in front for the team's meetings.
+// Modelled in meters, then scaled into scene units; built from simple shapes so it stays light on phones.
 
 const SOFA = { x: 4.5, z: 0 }; // about 4.5 m back from the screen, the comfortable distance for its size
 const ARMCHAIRS = [
@@ -13,6 +15,7 @@ const ARMCHAIRS = [
   { x: 5.9, z: 6.2, turn: 0.45 },
 ];
 const TABLE = { x: 9.1, z: 0 }; // leaves room to stand up in front of the sofa
+const DISCUSSION = { x: -13, seats: 4, table: { width: 1.7, depth: 0.6, gap: 0.75 } }; // gap: sofa front to table, meters
 
 const fabric = new THREE.MeshStandardMaterial({ color: 0x8c918d, roughness: 0.95 }); // warm grey
 const accentFabric = new THREE.MeshStandardMaterial({ color: COLORS.teal, roughness: 0.9 });
@@ -76,6 +79,25 @@ const createCoffeeTable = () => {
   return table;
 };
 
+// The discussion sofa's long, low table: a walnut top with a teal band, on four square legs
+const createLowTable = ({ width, depth }) => {
+  const table = new THREE.Group();
+  const top = new THREE.Mesh(new RoundedBoxGeometry(width, 0.05, depth, 2, 0.015), wood);
+  top.position.y = 0.4;
+  const band = new THREE.Mesh(new THREE.BoxGeometry(width - 0.3, 0.003, 0.08), accentFabric);
+  band.position.y = 0.4 + 0.026;
+  table.add(top, band);
+  [-1, 1].forEach((side) =>
+    [-1, 1].forEach((end) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.38, 0.05), wood);
+      leg.position.set(side * (width / 2 - 0.08), 0.19, end * (depth / 2 - 0.08));
+      table.add(leg);
+    })
+  );
+  table.scale.setScalar(UNITS_PER_METER);
+  return table;
+};
+
 const createRug = () => {
   const rug = new THREE.Mesh(
     new THREE.PlaneGeometry(3.8 * UNITS_PER_METER, 4.0 * UNITS_PER_METER),
@@ -95,11 +117,14 @@ const createRug = () => {
 // `facing`, the yaw of the way the seat faces
 export const seats = [];
 
-const addSeats = (furniture) => {
+// `lookAhead`: sitting looks straight out from the seat instead of at the projector screen
+const addSeats = (furniture, lookAhead = false) => {
   furniture.seat.updateMatrixWorld();
+  const facing = furniture.seat.rotation.y;
   furniture.spots.forEach((spot) => {
     const position = furniture.seat.localToWorld(spot.clone());
-    seats.push({ position, facing: furniture.seat.rotation.y });
+    const lookAt = lookAhead ? new THREE.Vector3(position.x + Math.sin(facing) * 12, 1.2, position.z + Math.cos(facing) * 12) : undefined;
+    seats.push({ position, facing, lookAt });
   });
 };
 
@@ -124,6 +149,21 @@ export const createLounge = (scene) => {
     addSeats(chair);
     colliders.push(collider(x, z, chair.depth, chair.depth));
   });
+
+  // Discussion corner: the sofa backs onto the back wall and faces into the room (-z)
+  const discussion = createSeat(DISCUSSION.seats, accentFabric);
+  const sofaZ = ROOM.back - discussion.depth / 2 - 0.15;
+  discussion.seat.position.set(DISCUSSION.x, FLOOR_Y, sofaZ);
+  discussion.seat.rotation.y = Math.PI;
+  lounge.add(discussion.seat);
+  addSeats(discussion, true);
+  colliders.push(collider(DISCUSSION.x, sofaZ, discussion.width, discussion.depth));
+  const { table: low } = DISCUSSION;
+  const lowTable = createLowTable(low);
+  const tableZ = sofaZ - discussion.depth / 2 - (low.gap + low.depth / 2) * UNITS_PER_METER;
+  lowTable.position.set(DISCUSSION.x, FLOOR_Y, tableZ);
+  lounge.add(lowTable);
+  colliders.push(collider(DISCUSSION.x, tableZ, low.width * UNITS_PER_METER + 0.3, low.depth * UNITS_PER_METER + 0.3));
 
   const table = createCoffeeTable();
   table.position.set(TABLE.x, FLOOR_Y, TABLE.z);

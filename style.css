@@ -577,7 +577,9 @@ body.exploring #landing-title {
 #seat-button,
 #photo-button,
 #arcade-button,
-#instrument-button {
+#instrument-button,
+#piano-button,
+#racing-button {
   position: fixed;
   left: 50%;
   bottom: calc(28px + env(safe-area-inset-bottom));
@@ -598,13 +600,17 @@ body.exploring #landing-title {
 #seat-button[hidden],
 #photo-button[hidden],
 #arcade-button[hidden],
-#instrument-button[hidden] {
+#instrument-button[hidden],
+#piano-button[hidden],
+#racing-button[hidden] {
   display: none;
 }
 
 #photo-button,
 #arcade-button,
-#instrument-button {
+#instrument-button,
+#piano-button,
+#racing-button {
   animation: photo-button-in 0.25s ease-out;
 }
 
@@ -629,8 +635,286 @@ body.at-arcade #photo-button,
 body.at-arcade #bar-actions,
 body.at-arcade #info-panel,
 body.touch-mode.exploring.at-arcade #rotate-toast.show,
-body.touch-mode.exploring.at-arcade #touch-ui {
+body.touch-mode.exploring.at-arcade #touch-ui,
+body.at-piano #seat-button,
+body.at-piano #photo-button,
+body.at-piano #bar-actions,
+body.at-piano #instrument-button,
+body.at-piano #info-panel,
+body.touch-mode.exploring.at-piano #rotate-toast.show,
+body.touch-mode.exploring.at-piano #touch-ui,
+body.at-arcade #racing-button,
+body.at-piano #racing-button,
+body.at-racing #seat-button,
+body.at-racing #photo-button,
+body.at-racing #bar-actions,
+body.at-racing #arcade-button,
+body.at-racing #piano-button,
+body.at-racing #instrument-button,
+body.at-racing #info-panel,
+body.touch-mode.exploring.at-racing #rotate-toast.show,
+body.touch-mode.exploring.at-racing #touch-ui {
   display: none;
+}
+
+/* In the racing seat (modules/racingPlay.js): the three screens fill the view; on touch, steer under the
+   left thumb and the pedals under the right. The pad covers the page so a drag can't turn the view. */
+#racing-pad {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1; /* under the music buttons */
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+body.at-racing #racing-pad {
+  display: block;
+}
+
+#racing-pad button {
+  border: 2px solid var(--cc-lime);
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-weight: 800;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  touch-action: none;
+}
+
+#racing-exit {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.racing-steer,
+.racing-pedals {
+  display: none;
+}
+
+body.touch-mode .racing-steer,
+body.touch-mode .racing-pedals {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+body.touch-mode .racing-steer {
+  left: calc(24px + env(safe-area-inset-left));
+}
+
+body.touch-mode .racing-pedals {
+  right: calc(24px + env(safe-area-inset-right));
+}
+
+.racing-steer button {
+  width: clamp(64px, 16vmin, 96px);
+  height: clamp(64px, 16vmin, 96px);
+  border-radius: 50%;
+  font-size: clamp(22px, 5vmin, 32px);
+}
+
+#racing-pad .racing-pedals button {
+  width: clamp(64px, 15vmin, 90px);
+  height: clamp(84px, 22vmin, 128px);
+  border-radius: 16px;
+  font-size: clamp(12px, 3vmin, 16px);
+  letter-spacing: 0.04em;
+}
+
+#racing-pad #racing-gas {
+  height: clamp(100px, 27vmin, 150px);
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+.racing-steer button:active,
+.racing-pedals button:active {
+  transform: scale(0.94);
+}
+
+.racing-keys {
+  position: absolute;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body.touch-mode .racing-keys {
+  display: none;
+}
+
+/* Seated at the grand piano (modules/pianoPlay.js): the 3D keys in view above, a keyboard to play along
+   the bottom. The pad covers the page so a drag can't turn the view. */
+#piano-pad {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1; /* under the music buttons */
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+}
+
+body.at-piano #piano-pad {
+  display: block;
+}
+
+#piano-pad button {
+  border: 2px solid var(--cc-lime);
+  background-color: var(--cc-teal-glass);
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+#piano-exit {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+#piano-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px calc(10px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom))
+    calc(10px + env(safe-area-inset-left));
+  background: linear-gradient(180deg, rgba(13, 17, 17, 0), rgba(13, 17, 17, 0.85) 30%);
+}
+
+.piano-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.piano-controls button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.piano-controls button[aria-pressed="true"] {
+  background-color: var(--cc-lime);
+  color: var(--cc-ink);
+}
+
+#piano-range {
+  min-width: 82px;
+  color: var(--cc-cream);
+  font-family: var(--cc-font);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+#piano-keys {
+  position: relative;
+  max-width: 980px;
+  height: clamp(110px, 26vh, 200px);
+  margin: 0 auto;
+  border-top: 4px solid #6d1420; /* the red felt strip */
+  border-radius: 4px;
+  background-color: #0b0b0d;
+  touch-action: none;
+}
+
+.piano-key {
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 6px;
+  font-family: var(--cc-font);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.piano-key.white {
+  bottom: 0;
+  border: 1px solid #1a1a1a;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(180deg, #e9e5da, #fbf9f3 12%, #f4f1e8);
+  color: #6b6b6b;
+  font-size: 11px;
+}
+
+.piano-key.black {
+  z-index: 1;
+  height: 62%;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(180deg, #1a1a1c, #050506 85%, #2a2a2c);
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.5);
+  color: #9a9a9a;
+  font-size: 10px;
+}
+
+.piano-key.white.down {
+  background: linear-gradient(180deg, #d9d5c8, #e8ecc8);
+  box-shadow: inset 0 0 14px rgba(208, 235, 0, 0.75);
+}
+
+.piano-key.black.down {
+  background: linear-gradient(180deg, #2c3205, #4d5a00);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.piano-key small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9a9a9a;
+}
+
+/* Phones held sideways: a slimmer panel, so the piano itself keeps more of the screen */
+@media (max-height: 500px) {
+  #piano-panel {
+    padding-top: 4px;
+  }
+
+  .piano-controls {
+    margin-bottom: 4px;
+  }
+
+  .piano-controls button {
+    padding: 4px 12px;
+    font-size: 13px;
+  }
+
+  #piano-keys {
+    height: 30vh;
+  }
 }
 
 #arcade-pad button {
@@ -1579,7 +1863,9 @@ body.touch-mode button {
   body.touch-mode #seat-button,
   body.touch-mode #photo-button,
   body.touch-mode #arcade-button,
-  body.touch-mode #instrument-button {
+  body.touch-mode #instrument-button,
+  body.touch-mode #piano-button,
+  body.touch-mode #racing-button {
     bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
   }
 

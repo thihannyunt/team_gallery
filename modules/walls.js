@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { texturePath } from "./textureQuality.js";
+import { ROOM, ROOM_CENTER_X } from "./room.js";
 
 export function createWalls(scene, textureLoader) {
   let wallGroup = new THREE.Group();
@@ -27,7 +28,7 @@ export function createWalls(scene, textureLoader) {
     wallMaterial 
   );
 
-  frontWall.position.z = -20; 
+  frontWall.position.set(ROOM_CENTER_X, 0, ROOM.front); 
 
   // Left Wall
   const leftWall = new THREE.Mesh(
@@ -36,7 +37,7 @@ export function createWalls(scene, textureLoader) {
   );
 
   leftWall.rotation.y = Math.PI / 2; 
-  leftWall.position.x = -20; 
+  leftWall.position.x = ROOM.left; // moved out for the piano salon (room.js)
 
   // Right Wall
   const rightWall = new THREE.Mesh( 
@@ -44,7 +45,7 @@ export function createWalls(scene, textureLoader) {
     wallMaterial
   );
 
-  rightWall.position.x = 20;
+  rightWall.position.x = ROOM.right;
   rightWall.rotation.y = Math.PI / 2; 
 
   // Back Wall
@@ -52,7 +53,7 @@ export function createWalls(scene, textureLoader) {
     new THREE.BoxGeometry(80, 20, 0.001),
     wallMaterial 
   );
-  backWall.position.z = 20;
+  backWall.position.set(ROOM_CENTER_X, 0, ROOM.back);
 
   wallGroup.add(frontWall, backWall, leftWall, rightWall);
 

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GUI } from "lil-gui";
+import { ROOM, ROOM_WIDTH, ROOM_DEPTH, ROOM_CENTER_X, ROOM_CENTER_Z } from "./room.js";
 
 // Warm, soft gallery lighting: the room sits in a low warm glow and every artwork gets its own
 // ceiling track spotlight, so each photo hangs in a soft pool of light on the wall. A warm LED strip
@@ -17,8 +18,18 @@ const TRACK = {
   intensity: 1.5,
   penumbra: 0.8, // soft-edged pools of light
 };
-const CEILING_Y = 10;
-const WALL = 20; // walls stand at ±20
+const CEILING_Y = ROOM.ceiling;
+const RAIL_SHORTER = 6; // each track stops this much short of its wall's full length
+
+// Each wall by the way it faces (rotationY, as the cove and rail groups turn), its middle and length
+const WALLS = [
+  { rotationY: 0, x: ROOM_CENTER_X, z: ROOM.front, length: ROOM_WIDTH },
+  { rotationY: Math.PI, x: ROOM_CENTER_X, z: ROOM.back, length: ROOM_WIDTH },
+  { rotationY: Math.PI / 2, x: ROOM.left, z: ROOM_CENTER_Z, length: ROOM_DEPTH },
+  { rotationY: -Math.PI / 2, x: ROOM.right, z: ROOM_CENTER_Z, length: ROOM_DEPTH },
+];
+const inFrom = ({ rotationY, x, z }, distance) =>
+  new THREE.Vector3(x + Math.sin(rotationY) * distance, 0, z + Math.cos(rotationY) * distance);
 
 const housingMaterial = new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.5, metalness: 0.4 });
 const lensMaterial = new THREE.MeshBasicMaterial({ color: 0xfff1d6 });
@@ -58,17 +69,16 @@ function createTrackLight(target) {
 }
 
 // Thin black ceiling track running the length of a wall, `TRACK.offset` out from it
-function createRail(rotationY) {
-  const normal = new THREE.Vector3(Math.sin(rotationY), 0, Math.cos(rotationY));
-  const rail = new THREE.Mesh(new THREE.BoxGeometry(34, 0.08, 0.12), housingMaterial);
-  rail.position.copy(normal).multiplyScalar(-(WALL - TRACK.offset));
+function createRail(wall) {
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(wall.length - RAIL_SHORTER, 0.08, 0.12), housingMaterial);
+  rail.position.copy(inFrom(wall, TRACK.offset));
   rail.position.y = TRACK.railY;
-  rail.rotation.y = rotationY;
+  rail.rotation.y = wall.rotationY;
   return rail;
 }
 
 // Warm LED strip where the wall meets the ceiling, with a soft glow washing down the wall
-function createCoveLight(rotationY) {
+function createCoveLight(wall) {
   const canvas = document.createElement("canvas");
   canvas.width = 4;
   canvas.height = 128;
@@ -80,10 +90,10 @@ function createCoveLight(rotationY) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const cove = new THREE.Group();
-  const strip = new THREE.Mesh(new THREE.BoxGeometry(2 * WALL, 0.06, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd9a0 }));
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(wall.length, 0.06, 0.06), new THREE.MeshBasicMaterial({ color: 0xffd9a0 }));
   strip.position.set(0, CEILING_Y - 0.08, 0.05);
   const glow = new THREE.Mesh(
-    new THREE.PlaneGeometry(2 * WALL, 1.6),
+    new THREE.PlaneGeometry(wall.length, 1.6),
     new THREE.MeshBasicMaterial({
       map: new THREE.CanvasTexture(canvas),
       transparent: true,
@@ -95,9 +105,8 @@ function createCoveLight(rotationY) {
   cove.add(strip, glow);
 
   // The group's +z faces into the room
-  const normal = new THREE.Vector3(Math.sin(rotationY), 0, Math.cos(rotationY));
-  cove.position.copy(normal).multiplyScalar(-(WALL - 0.01));
-  cove.rotation.y = rotationY;
+  cove.position.copy(inFrom(wall, 0.01));
+  cove.rotation.y = wall.rotationY;
   return cove;
 }
 
@@ -137,7 +146,7 @@ export const setupLighting = (scene, paintings, extraTargets = []) => {
     .onChange((value) => spotlights.forEach((spotlight) => (spotlight.intensity = value)));
 
   // Tracks and cove strips on every wall, the projector wall included, so the room reads as one
-  [0, Math.PI / 2, -Math.PI / 2, Math.PI].forEach((rotationY) => {
-    scene.add(createRail(rotationY), createCoveLight(rotationY));
+  WALLS.forEach((wall) => {
+    scene.add(createRail(wall), createCoveLight(wall));
   });
 };

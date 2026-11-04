@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import { texturePath } from "./textureQuality.js";
+import { ROOM, ROOM_WIDTH, ROOM_DEPTH, ROOM_CENTER_X, ROOM_CENTER_Z } from "./room.js";
+
+const SIZE = { x: ROOM_WIDTH + 1, z: ROOM_DEPTH };
+const TILE_SCALE = { x: 45, z: 40 }; // the size the textures were made to cover, keeps the tiles that size
 
 // create a function that takes a scene and a textureLoader as arguments that will be passed in from main.js where the createCeiling is called
 export const createCeiling = (scene, textureLoader) => {
@@ -34,8 +38,11 @@ export const createCeiling = (scene, textureLoader) => {
   metalnessTexture.wrapS = metalnessTexture.wrapT = THREE.RepeatWrapping;
   normalGLTexture.wrapS = normalGLTexture.wrapT = THREE.RepeatWrapping;
   roughnessTexture.wrapS = roughnessTexture.wrapT = THREE.RepeatWrapping;
+  [colorTexture, displacementTexture, aoTexture, emissionTexture, metalnessTexture, normalGLTexture, roughnessTexture].forEach(
+    (texture) => texture.repeat.set(SIZE.x / TILE_SCALE.x, SIZE.z / TILE_SCALE.z)
+  );
 
-  const ceilingGeometry = new THREE.PlaneGeometry(45, 40);
+  const ceilingGeometry = new THREE.PlaneGeometry(SIZE.x, SIZE.z);
   const ceilingMaterial = new THREE.MeshLambertMaterial({
     map: colorTexture,
     displacementMap: displacementTexture,
@@ -52,7 +59,7 @@ export const createCeiling = (scene, textureLoader) => {
 
   ceilingPlane.rotation.x = Math.PI / 2;
 
-  ceilingPlane.position.y = 10;
+  ceilingPlane.position.set(ROOM_CENTER_X, ROOM.ceiling, ROOM_CENTER_Z);
 
   scene.add(ceilingPlane);
 };

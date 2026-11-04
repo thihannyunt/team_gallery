@@ -99,11 +99,13 @@ export const setupInstrumentPlay = (playerCamera, pointerLockControls) => {
     if (event.key === 'e' && isExploring() && !playing && !canSit() && !photoOffered()) open();
   });
 
-  // While an instrument is open the keys play it (W/A/S/D would walk, Esc open the main menu)
+  // While an instrument is open the keys only play it: nothing else in the gallery or the browser gets
+  // them (W/A/S/D would walk, F would go full screen though it's a khlui note, Space would scroll).
+  // Esc closes it; Tab/Enter still work the buttons, and Cmd/Ctrl/Alt shortcuts go to the browser.
   const handOver = (down) => (event) => {
-    if (!playing || event.key === 'f') return;
+    if (!playing) return;
     event.stopImmediatePropagation();
-    if (event.key === ' ' || event.key.startsWith('Arrow')) event.preventDefault(); // no scrolling
+    if (!event.metaKey && !event.ctrlKey && !event.altKey && event.key !== 'Tab' && event.key !== 'Enter') event.preventDefault();
     if (down && event.key === 'Escape') {
       close({ relock: false });
       return;
