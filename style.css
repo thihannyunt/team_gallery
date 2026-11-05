@@ -2291,6 +2291,77 @@ body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
   display: none;
 }
 
+/* Controls strip: the basics, always on screen while exploring (index.html #control-strip). A keyboard
+   gets the keys, a touch screen the pad and gestures; the full list is the Controls panel. Under the top
+   buttons on touch screens; hidden at the arcade, piano and racing seat, which show their own controls. */
+#control-strip {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--cc-teal-glass);
+  border: 1px solid rgba(208, 235, 0, 0.18);
+  box-shadow: 0 8px 24px rgba(2, 24, 24, 0.35);
+  color: var(--cc-cream-muted);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#control-strip b {
+  color: var(--cc-cream);
+  font-weight: 800;
+}
+
+#control-strip i {
+  font-style: normal;
+  color: var(--cc-lime);
+  margin: 0 8px;
+}
+
+#control-strip kbd {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 3px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(247, 245, 240, 0.12);
+  border: 1px solid rgba(247, 245, 240, 0.28);
+  color: var(--cc-cream);
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+}
+
+#control-strip .touch-help-strip {
+  display: none;
+}
+
+body.touch-mode #control-strip .touch-help-strip {
+  display: inline;
+}
+
+body.touch-mode #control-strip .keyboard-help-strip {
+  display: none;
+}
+
+body.touch-mode #control-strip {
+  top: calc(62px + env(safe-area-inset-top));
+  padding: 6px 13px;
+  font-size: 12px;
+}
+
+body:not(.exploring) #control-strip,
+body.at-arcade #control-strip,
+body.at-piano #control-strip,
+body.at-racing #control-strip {
+  display: none;
+}
+
 /* Landing page: only the video and the floating menu buttons, nothing else covering the gallery
    walk-through. Last in the file so it wins over the touch-mode layouts above. */
 body:not(.exploring) #audio_controls,

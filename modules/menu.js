@@ -5,6 +5,7 @@ export const hideMenu = () => {
   const menu = document.getElementById('menu');
   menu.style.display = 'none'; // Hide the menu
   document.body.classList.add('exploring'); // Show the on-screen touch controls (in touch mode)
+  document.dispatchEvent(new Event('gallery-enter')); // touchControls.js shows its how-to hints again
   pauseIntroVideo();
   startAudioOnEnter();
 };

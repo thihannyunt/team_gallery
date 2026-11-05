@@ -9,7 +9,6 @@ const ARROW_THRESHOLD = 0.35; // how far toward a direction the joystick must be
 const TAP_MAX_MOVE = 10; // pixels a finger can drift and still count as a tap
 const TAP_MAX_TIME = 300; // milliseconds a finger can stay down and still count as a tap
 const ROTATE_TOAST_TIME = 6000; // milliseconds the "turn your phone sideways" reminder stays up
-const HINTS_KEY = "touchHints"; // "done" once the visitor has both swiped to look and walked
 const LOOK_HINT_DISTANCE = 60; // pixels a drag must cover to count as having tried looking around
 
 const euler = new THREE.Euler(0, 0, 0, "YXZ"); // same rotation order PointerLockControls uses
@@ -34,27 +33,12 @@ const isTouchDevice = () =>
 // Touch controls only react while the gallery is being explored, not while the menu is open
 const isActive = () => enabled && document.body.classList.contains("exploring");
 
-// First-visit hints (index.html #look-hint, #move-hint): shown while the body has hint-look / hint-move.
-// Each fades once the visitor has tried that gesture; after both, they stay away on later visits too.
-const hintsDone = () => {
-  try {
-    return localStorage.getItem(HINTS_KEY) === "done";
-  } catch {
-    return false;
-  }
-};
+// How-to hints (index.html #look-hint, #move-hint): shown while the body has hint-look / hint-move, every
+// time the visitor enters the gallery. Each fades once the visitor has tried that gesture; the controls
+// strip at the top (style.css #control-strip) keeps the basics on screen after that.
+const showHints = () => document.body.classList.add("hint-look", "hint-move");
 
-const finishHint = (name) => {
-  const classes = document.body.classList;
-  if (!classes.contains(`hint-${name}`)) return;
-  classes.remove(`hint-${name}`);
-  if (classes.contains("hint-look") || classes.contains("hint-move")) return;
-  try {
-    localStorage.setItem(HINTS_KEY, "done");
-  } catch {
-    // storage blocked (private mode etc.), the hints just show again next visit
-  }
-};
+const finishHint = (name) => document.body.classList.remove(`hint-${name}`);
 
 // Lights the joystick's forward/back/left/right arrows that match the current push
 const highlightArrows = () => {
@@ -209,7 +193,8 @@ export const setupTouchControls = (renderer, camera, paintings) => {
     showMenu();
   });
 
-  if (!hintsDone()) document.body.classList.add("hint-look", "hint-move");
+  showHints();
+  document.addEventListener("gallery-enter", showHints); // menu.js, each time Explore is pressed
 
   // Phones and tablets always get the joystick: without a keyboard there's no other way to walk
   const detectTouchMode = () => setTouchMode(isTouchDevice());
@@ -218,9 +203,14 @@ export const setupTouchControls = (renderer, camera, paintings) => {
   // Resizing a desktop window down to phone or tablet size (or back) switches the joystick on (or off)
   TOUCH_SIZED_SCREEN.addEventListener("change", detectTouchMode);
 
-  if (enabled) {
-    // the controls help panel takes up too much of a small screen, start it collapsed
+  // The full controls list starts open on tablets, as on a laptop. A phone's screen is too small for it:
+  // there it waits behind the "!" button, and the controls strip shows the basics.
+  const isPhone = Math.min(window.screen.width, window.screen.height) < 600;
+  if (enabled && isPhone) {
     document.getElementById("info-panel").classList.add("collapsed");
     document.getElementById("toggle-info").innerText = "Show";
   }
+  document
+    .getElementById("help_button")
+    .setAttribute("aria-expanded", String(!document.getElementById("info-panel").classList.contains("collapsed")));
 };
