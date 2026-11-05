@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { openPhotoViewer, isPhotoViewerOpen } from './photoViewer.js';
+import { openPhotoViewer, isPhotoViewerOpen, preloadPhoto } from './photoViewer.js';
 import { canSit } from './seating.js';
 
 // "View photo" button: walk up to a photo and look at it, and a button appears at the bottom of the
@@ -52,7 +52,10 @@ const show = (painting) => {
   if (painting === shownFor) return;
   shownFor = painting;
   button().hidden = !painting;
-  if (painting) button().setAttribute('aria-label', `View photo: ${painting.userData.info.title}`);
+  if (painting) {
+    button().setAttribute('aria-label', `View photo: ${painting.userData.info.title}`);
+    preloadPhoto(painting.userData.info); // ready by the time it's tapped
+  }
 };
 
 const open = () => {

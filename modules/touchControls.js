@@ -34,8 +34,8 @@ const isTouchDevice = () =>
 const isActive = () => enabled && document.body.classList.contains("exploring");
 
 // How-to hints (index.html #look-hint, #move-hint): shown while the body has hint-look / hint-move, every
-// time the visitor enters the gallery. Each fades once the visitor has tried that gesture; the controls
-// strip at the top (style.css #control-strip) keeps the basics on screen after that.
+// time the visitor enters the gallery. Each fades once the visitor has tried that gesture; on tablets the
+// controls strip at the top (style.css #control-strip) keeps the basics on screen after that.
 const showHints = () => document.body.classList.add("hint-look", "hint-move");
 
 const finishHint = (name) => document.body.classList.remove(`hint-${name}`);

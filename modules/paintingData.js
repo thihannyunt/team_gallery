@@ -132,6 +132,7 @@ export const paintingData = layouts.flatMap(({ wall, slots }) =>
         portfolio: photo.portfolio,
         year: YEAR,
         link: imgSrc, // clicking a painting opens the full-size photo
+        aspect: photo.aspect, // the viewer's placeholder takes this shape while the photo downloads
       },
     };
   })

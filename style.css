@@ -1563,6 +1563,24 @@ body.touch-mode .key-hint {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
+/* While the full-size photo downloads (photoViewer.js): a softly pulsing placeholder in its shape, never
+   the photo opened last */
+#photo-viewer img.loading {
+  height: calc(100vh - 190px);
+  height: calc(100dvh - 190px);
+  background-color: rgba(247, 245, 240, 0.1);
+  animation: photo-loading 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes photo-loading {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 #photo-viewer figcaption {
   text-align: center;
   font-family: var(--cc-font);
@@ -1721,6 +1739,11 @@ body.touch-mode .key-hint {
     max-width: 65vw;
     max-height: calc(100vh - 16px);
     max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  #photo-viewer img.loading {
+    height: calc(100vh - 16px);
+    height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 
   #photo-viewer figcaption {
@@ -2291,9 +2314,10 @@ body.touch-mode #audio_controls #help_button[aria-expanded="true"] {
   display: none;
 }
 
-/* Controls strip: the basics, always on screen while exploring (index.html #control-strip). A keyboard
-   gets the keys, a touch screen the pad and gestures; the full list is the Controls panel. Under the top
-   buttons on touch screens; hidden at the arcade, piano and racing seat, which show their own controls. */
+/* Controls strip: the basics, always on screen while exploring on laptops and tablets (index.html
+   #control-strip). A keyboard gets the keys, a touch screen the pad and gestures; the full list is the
+   Controls panel. Under the top buttons on tablets; hidden at the arcade, piano and racing seat, which show
+   their own controls, and on phones (below). */
 #control-strip {
   position: fixed;
   top: 14px;
@@ -2353,6 +2377,14 @@ body.touch-mode #control-strip {
   top: calc(62px + env(safe-area-inset-top));
   padding: 6px 13px;
   font-size: 12px;
+}
+
+/* Phones: no strip, their screen is small; the walk / look hints show each time the gallery is entered
+   and the "!" button has the full list */
+@media (max-width: 600px), (max-height: 600px) {
+  body.touch-mode #control-strip {
+    display: none;
+  }
 }
 
 body:not(.exploring) #control-strip,
