@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { FLOOR_Y } from './paintingData.js';
 import { createCharacter } from './character.js';
-import { ROOM } from './room.js';
+import { keepInside } from './room.js';
 
 // Third-person view. The PointerLockControls camera stays the player's "eyes": movement,
 // collisions, touch look and painting proximity all keep using it. A second camera follows
@@ -19,7 +19,7 @@ const STORAGE_KEY = 'viewModeChoice';
 const SHOULDER_OFFSET = new THREE.Vector3(2.2, 3.2, 11); // right, up and behind the player's eyes
 const FOCUS_DISTANCE = 12; // the camera aims at the spot this far ahead of the player's eyes
 const WALL_GAP = 0.8; // keep the camera this far inside the walls (room.js)
-const CEILING_LIMIT = 9.5; // ceiling is at y = 10
+const CEILING_GAP = 0.5; // and this far under the ceiling (y = 10 in the gallery, lower in the tunnel)
 
 let playerCamera;
 let viewCamera;
@@ -114,9 +114,7 @@ export const updatePlayerView = (delta) => {
   const side = SHOULDER_OFFSET.x * Math.min(1, playerCamera.aspect / 1.5);
   offset.set(side, SHOULDER_OFFSET.y, SHOULDER_OFFSET.z).applyQuaternion(playerCamera.quaternion);
   viewCamera.position.copy(position).add(offset);
-  viewCamera.position.x = THREE.MathUtils.clamp(viewCamera.position.x, ROOM.left + WALL_GAP, ROOM.right - WALL_GAP);
-  viewCamera.position.z = THREE.MathUtils.clamp(viewCamera.position.z, ROOM.front + WALL_GAP, ROOM.back - WALL_GAP);
-  viewCamera.position.y = THREE.MathUtils.clamp(viewCamera.position.y, FLOOR_Y + 0.5, CEILING_LIMIT);
+  keepInside(viewCamera.position, position, WALL_GAP, FLOOR_Y + 0.5, CEILING_GAP); // the gallery, tunnel or Sky Lounge
 
   // Aim ahead of the player from above the head, keeping the same sideways shift so the view runs
   // parallel to the player's: the character sits low and to the left instead of in front of the paintings

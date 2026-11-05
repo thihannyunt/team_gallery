@@ -5,8 +5,8 @@ import { keysPressed, touchInput } from './movement.js';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { SCREEN_CENTER } from './projector.js';
 
-// Sit down on the sofa or an armchair and watch "Team Activities", or on a bar stool (barDrinks.js
-// serves the drinks). Walk up to a seat and a "Sit" button appears (press E on a keyboard, or tap it).
+// Sit down on the sofa or an armchair and watch "Team Activities", on a bar stool (barDrinks.js
+// serves the drinks), or by the Sky Lounge's windows (skyLounge.js) to take in the view. Walk up to a seat and a "Sit" button appears (press E on a keyboard, or tap it).
 // Sitting turns the view to the projector screen, or to the bar for a stool; press E again, tap
 // "Stand up" or simply start walking to get up.
 
@@ -71,6 +71,7 @@ const showButton = (state) => {
   element.hidden = !state;
   if (state === 'sit') element.innerHTML = '🪑 Sit &amp; watch<span class="key-hint"> · E</span>';
   if (state === 'sit-bar') element.innerHTML = '🪑 Sit at the bar<span class="key-hint"> · E</span>';
+  if (state === 'sit-view') element.innerHTML = '🪑 Sit &amp; enjoy the view<span class="key-hint"> · E</span>';
   if (state === 'stand') element.innerHTML = 'Stand up<span class="key-hint"> · E</span>';
 };
 
@@ -98,5 +99,5 @@ export const updateSeating = () => {
     stand(); // walking off gets you up
   }
   nearest = seat ? null : findNearest();
-  showButton(seat ? 'stand' : nearest ? (nearest.kind === 'bar' ? 'sit-bar' : 'sit') : '');
+  showButton(seat ? 'stand' : nearest ? ({ bar: 'sit-bar', view: 'sit-view' }[nearest.kind] ?? 'sit') : '');
 };

@@ -23,8 +23,8 @@ const wood = new THREE.MeshStandardMaterial({ color: 0x8a6440, roughness: 0.7 })
 const cushion = (width, height, depth, material) =>
   new THREE.Mesh(new RoundedBoxGeometry(width, height, depth, 3, Math.min(width, height, depth) * 0.3), material);
 
-// A sofa (seats > 1) or armchair (seats = 1), seat facing +z, standing on y = 0
-const createSeat = (seats, material) => {
+// A sofa (seats > 1) or armchair (seats = 1), seat facing +z, standing on y = 0. Also skyLounge.js's.
+export const createSeat = (seats, material) => {
   const seatWidth = 0.62;
   const armWidth = 0.18;
   const width = seats * seatWidth + 2 * armWidth;
@@ -129,6 +129,11 @@ const addSeats = (furniture, lookAhead = false) => {
 };
 
 // Adds the lounge and returns its invisible colliders for main.js to add to the walls
+// Middle of the discussion sofa's low table on the floor plan (y unused), and where the sofa stands
+// (scene units), set by createLounge for galleryDecor.js: the table lamp and the plants either side
+export const discussionTableCenter = new THREE.Vector3();
+export const discussionSofa = { x: 0, z: 0, width: 0 };
+
 export const createLounge = (scene) => {
   const colliders = [];
   const lounge = new THREE.Group();
@@ -158,10 +163,12 @@ export const createLounge = (scene) => {
   lounge.add(discussion.seat);
   addSeats(discussion, true);
   colliders.push(collider(DISCUSSION.x, sofaZ, discussion.width, discussion.depth));
+  Object.assign(discussionSofa, { x: DISCUSSION.x, z: sofaZ, width: discussion.width });
   const { table: low } = DISCUSSION;
   const lowTable = createLowTable(low);
   const tableZ = sofaZ - discussion.depth / 2 - (low.gap + low.depth / 2) * UNITS_PER_METER;
   lowTable.position.set(DISCUSSION.x, FLOOR_Y, tableZ);
+  discussionTableCenter.set(DISCUSSION.x, 0, tableZ);
   lounge.add(lowTable);
   colliders.push(collider(DISCUSSION.x, tableZ, low.width * UNITS_PER_METER + 0.3, low.depth * UNITS_PER_METER + 0.3));
 

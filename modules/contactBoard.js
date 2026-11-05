@@ -8,7 +8,7 @@ import { about } from './teamData.js';
 
 const BOARD = { width: 9.4, height: 5.8 }; // the writing surface
 const FRAME = 0.14;
-const CENTER = { x: 15.1, y: 3.1, z: 19.95 }; // back wall stands at z = 20
+const CENTER = { x: 13.9, y: 3.1, z: 19.95 }; // back wall stands at z = 20; room for a fig in the corner (galleryDecor.js)
 const SCALE = 0.8; // under full size, to leave room beside the exit door and clear the speaker below
 
 const outerWidth = BOARD.width + 2 * FRAME;

@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 import { COLORS } from './badmintonDecor.js';
 import { useMobileTextures } from './textureQuality.js';
+import { FLOOR_Y } from './paintingData.js';
+import { createGlow } from './fakeGlow.js';
 
 // "Team Activities" projector slideshow on the right wall, the first wall you see on your right
 // after starting. A ceiling projector faces a wide screen of crew photos; each slide holds,
@@ -33,7 +34,7 @@ const PROJECTOR = { x: -2, y: 8.9, z: 0 }; // hangs from the ceiling, lens towar
 // The lens, in world space: the projector is turned so its local (0.3, 0, 0.7) lands here
 const LENS = new THREE.Vector3(PROJECTOR.x + 0.7, PROJECTOR.y, PROJECTOR.z - 0.3);
 const BEAM_STRENGTH = 0.06; // how visible the beam is in the air near the lens (0 to 1)
-const ROOM_LIGHT = 2.2; // how strongly the screen's picture lights the room in front of it
+const ROOM_GLOW = { depth: 12, strength: 0.55 }; // the picture's light on the floor in front of the screen
 
 const vertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -66,7 +67,8 @@ const blank = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
 blank.needsUpdate = true;
 
 let uniforms;
-let roomLight;
+let renderer; // to upload each slide to the GPU ahead of its crossfade
+let roomGlow;
 let beamUniforms;
 const glowColor = new THREE.Color(); // the screen's current average colour, for the beam and room light
 let current = blank; // on screen
@@ -76,13 +78,42 @@ let loading = false;
 let elapsed = HOLD_TIME; // start fading in the first slide as soon as it loads
 let fading = false;
 
-const loadImage = (src) =>
-  new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
+// Preparing a slide used to stall the frame every few seconds while walking: decoding 2048px JPEGs,
+// reading the whole slide back for its colour and uploading it to the GPU all happened at once on the
+// main thread. Now the photos decode off the main thread, the colour comes from a tiny sample of each
+// photo, and the remaining steps run on separate frames during the hold, not when the crossfade starts.
+const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+// Fetches and decodes a photo off the main thread (createImageBitmap); an <img> where that's missing
+const loadImage = async (src) => {
+  if (window.createImageBitmap) {
+    const response = await fetch(src);
+    if (!response.ok) throw new Error(`${src}: ${response.status}`);
+    return createImageBitmap(await response.blob());
+  }
+  const image = new Image();
+  image.src = src;
+  await image.decode();
+  return image;
+};
+
+// A photo's average colour (0 to 1 per channel), from an 8 x 8 copy of it
+const sampler = document.createElement('canvas');
+sampler.width = sampler.height = 8;
+const samplerCtx = sampler.getContext('2d', { willReadFrequently: true });
+const averageColor = (image) => {
+  samplerCtx.clearRect(0, 0, 8, 8);
+  samplerCtx.drawImage(image, 0, 0, 8, 8);
+  const { data } = samplerCtx.getImageData(0, 0, 8, 8);
+  const sum = [0, 0, 0];
+  for (let i = 0; i < data.length; i += 4) {
+    sum[0] += data[i];
+    sum[1] += data[i + 1];
+    sum[2] += data[i + 2];
+  }
+  return sum.map((total) => total / (64 * 255));
+};
+const SCREEN_RGB = [0x0d / 255, 0x11 / 255, 0x11 / 255]; // SCREEN_COLOR
 
 // Draw a slide's photos side by side, all the same height, as large as fits, centered on the screen
 const composeSlide = (images) => {
@@ -103,21 +134,24 @@ const composeSlide = (images) => {
   );
   let x = (canvas.width - (totalAspect * height + (images.length - 1) * gap)) / 2;
   const y = (canvas.height - height) / 2;
+  // The slide's average colour, which the screen throws back into the room: each photo's colour by the
+  // share of the screen it covers, and the dark screen round them
+  const canvasArea = canvas.width * canvas.height;
+  const average = [0, 0, 0];
+  let covered = 0;
   images.forEach((image, i) => {
     const width = aspects[i] * height;
     ctx.drawImage(image, x, y, width, height);
     x += width + gap;
+    const share = (width * height) / canvasArea;
+    averageColor(image).forEach((value, channel) => (average[channel] += value * share));
+    covered += share;
   });
+  SCREEN_RGB.forEach((value, channel) => (average[channel] += value * (1 - covered)));
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
-  // The slide's average colour, which the screen throws back into the room
-  const average = document.createElement('canvas');
-  average.width = average.height = 1;
-  const averageCtx = average.getContext('2d');
-  averageCtx.drawImage(canvas, 0, 0, 1, 1);
-  const [r, g, b] = averageCtx.getImageData(0, 0, 1, 1).data;
-  texture.userData.average = new THREE.Color(r / 255, g / 255, b / 255);
+  texture.userData.average = new THREE.Color(...average);
   return texture;
 };
 
@@ -129,8 +163,13 @@ const loadNext = () => {
   const slide = SLIDES[nextIndex];
   nextIndex = (nextIndex + 1) % SLIDES.length;
   Promise.all(slide.map(loadImage))
-    .then((images) => {
-      next = composeSlide(images);
+    .then(async (images) => {
+      await nextFrame();
+      const texture = composeSlide(images);
+      images.forEach((image) => image.close?.()); // free the decoded photos (ImageBitmap)
+      await nextFrame();
+      renderer?.initTexture(texture); // upload it now, during the hold, not on the crossfade's first frame
+      next = texture;
     })
     .catch(() => {}) // skip a slide whose photos fail to load, the next call moves on
     .finally(() => {
@@ -320,21 +359,22 @@ const createProjector = () => {
   return group;
 };
 
-export const setupProjector = (scene) => {
-  // The picture's light thrown back into the room, tinted by what's on screen
-  RectAreaLightUniformsLib.init();
-  roomLight = new THREE.RectAreaLight(0xffffff, 0, SCREEN.width, SCREEN.height);
-  roomLight.position.set(SCREEN.x - 0.1, SCREEN.centerY, 0);
-  roomLight.lookAt(0, SCREEN.centerY, 0);
-  scene.add(createScreen(), createProjector(), createBeam(), roomLight);
+export const setupProjector = (scene, webglRenderer) => {
+  renderer = webglRenderer;
+  // The picture's light thrown onto the floor in front of it, tinted by what's on screen. Painted on
+  // (fakeGlow.js): a real area light here cost the whole gallery more frame rate than everything else.
+  // Starts black (no light) until the first slide's colour arrives.
+  roomGlow = createGlow(0x000000, SCREEN.width + 4, ROOM_GLOW.depth, ROOM_GLOW.strength, 'wash');
+  roomGlow.rotation.z = -Math.PI / 2; // the wash's bright edge against the right wall (+x)
+  roomGlow.position.set(SCREEN.x - ROOM_GLOW.depth / 2, FLOOR_Y + 0.01, 0);
+  scene.add(createScreen(), createProjector(), createBeam(), roomGlow);
   loadNext();
 };
 
 // Beam and room light follow the screen's average colour, blending with the crossfade
 const updateGlow = (fromTexture, toTexture, amount) => {
   glowColor.copy(averageOf(fromTexture)).lerp(averageOf(toTexture), amount);
-  roomLight.color.copy(glowColor);
-  roomLight.intensity = ROOM_LIGHT;
+  roomGlow.material.color.copy(glowColor);
   // The beam is mostly the lamp's white, tinted a little by the picture
   const brightness = Math.max(glowColor.r, glowColor.g, glowColor.b, 0.001);
   beamUniforms.color.value.setRGB(1, 1, 1).lerp(glowColor.clone().multiplyScalar(1 / brightness), 0.35);

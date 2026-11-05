@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { COLORS, collider } from './badmintonDecor.js';
+import { mergeStatic } from './mergeStatic.js';
+import { createGlow } from './fakeGlow.js';
 
 // Mini bar on the front wall, right of the team portrait and away from the projector screen: a back-bar cabinet with
 // lit shelves of bottles and a neon sign, a counter with a foot rail, three stools and two pendant
@@ -265,11 +267,15 @@ export const createMiniBar = (scene) => {
   });
   bar.scale.setScalar(U);
   bar.position.set(PLACE.x, FLOOR_Y, PLACE.z + 0.02); // built facing +z, into the room
+  mergeStatic(bar, { opaqueOnly: true });
 
-  // The pendants' light pooling on the counter top
-  const light = new THREE.PointLight(0xffcf8f, 0.9, 9, 2);
-  light.position.set(PLACE.x, FLOOR_Y + (PENDANT_DROP + 0.05) * U, PLACE.z + COUNTER.z * U);
-  scene.add(bar, light);
+  // The pendants' light pooling on the counter top and the floor in front, painted on rather than lit
+  // (fakeGlow.js)
+  const counterGlow = createGlow(0xffcf8f, (COUNTER.width + 0.6) * U, (COUNTER.depth + 0.5) * U, 0.35);
+  counterGlow.position.set(PLACE.x, FLOOR_Y + (COUNTER.height + 0.005) * U, PLACE.z + COUNTER.z * U);
+  const floorGlow = createGlow(0xffcf8f, 3.4 * U, 2 * U, 0.18);
+  floorGlow.position.set(PLACE.x, FLOOR_Y + 0.01, PLACE.z + (COUNTER.z + 0.9) * U);
+  scene.add(bar, counterGlow, floorGlow);
 
   const depthOf = (meters) => PLACE.z + meters * U; // meters out from the wall to world z
   STOOLS.xs.forEach((x) => {

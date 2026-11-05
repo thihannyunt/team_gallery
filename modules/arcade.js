@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
+import { createGlow } from './fakeGlow.js';
 import { COLORS, collider } from './badmintonDecor.js';
 import { drawAttract, drawMatch, isMatchOn, stepMatch } from './shuttleRally.js';
 
@@ -223,9 +224,9 @@ const createCabinet = () => {
 export const createArcade = (scene) => {
   const cabinet = createCabinet();
   cabinet.position.set(PLACE.x, FLOOR_Y, PLACE.z + 0.02);
-  // The screen's glow on the floor and the visitor standing at the controls
-  const glow = new THREE.PointLight(0x7fd8ff, 0.6, 6, 2);
-  glow.position.set(PLACE.x, FLOOR_Y + 1.4 * UNITS_PER_METER, PLACE.z + 1.2 * UNITS_PER_METER);
+  // The screen's glow on the floor in front of it, painted on rather than lit (fakeGlow.js)
+  const glow = createGlow(0x7fd8ff, 2.4 * UNITS_PER_METER, 2 * UNITS_PER_METER, 0.3);
+  glow.position.set(PLACE.x, FLOOR_Y + 0.01, PLACE.z + 1.1 * UNITS_PER_METER);
   scene.add(cabinet, glow);
 
   cabinet.updateMatrixWorld(true);

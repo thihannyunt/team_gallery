@@ -3,6 +3,8 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { collider } from './badmintonDecor.js';
 import { SCREEN_CENTER } from './projector.js';
+import { mergeStatic } from './mergeStatic.js';
+import { createGlow, createLightCone } from './fakeGlow.js';
 
 // A gloss-black grand piano on a raised round walnut mini stage in the back corner by the crew portraits
 // (room.js), the pianist facing the projector screen across the room. The lid is up on its stick and opens toward the entrance, showing the
@@ -28,6 +30,7 @@ const STAGE_CENTER_FROM_FRONT = 0.95; // the stage is centred under the body, a 
 
 const piano = new THREE.Group();
 const keyMeshes = new Map(); // MIDI note -> key mesh
+let shadowRenderer;
 
 // Where the stage is, in the room, for pianoPlay.js
 export const pianoStage = new THREE.Vector3(STAGE.x, FLOOR_Y, STAGE.z);
@@ -35,11 +38,11 @@ export const pianoStage = new THREE.Vector3(STAGE.x, FLOOR_Y, STAGE.z);
 // ---- Materials ----
 
 const lacquer = new THREE.MeshPhysicalMaterial({
-  color: 0x0a0a0c,
+  color: 0x16161a, // a touch off black, so the spotlight shows the case's shape
   roughness: 0.2,
   clearcoat: 1,
   clearcoatRoughness: 0.05,
-  envMapIntensity: 0.7,
+  envMapIntensity: 1.3, // brighter studio reflections in the lacquer
 });
 const satinBlack = new THREE.MeshStandardMaterial({ color: 0x121214, roughness: 0.6 });
 const brass = new THREE.MeshStandardMaterial({ color: 0xd4a646, roughness: 0.25, metalness: 1, envMapIntensity: 1 });
@@ -313,6 +316,7 @@ const createKeyboard = () => {
     const x = -span / 2 + (black ? white : white + 0.5) * pitch;
     key.position.set(x, y, 0.0);
     key.castShadow = true;
+    key.userData.keepSeparate = true; // keys rotate when played; the case can be batched
     group.add(key);
     keyMeshes.set(midi, key);
     if (!black) white += 1;
@@ -500,7 +504,11 @@ const applyReflections = (renderer) => {
 // Press or release one key of the 3D keyboard (pianoPlay.js)
 export const setPianoKey = (midi, down) => {
   const key = keyMeshes.get(midi);
-  if (key) key.rotation.x = down ? PRESS_ANGLE : 0;
+  const angle = down ? PRESS_ANGLE : 0;
+  if (!key || key.rotation.x === angle) return;
+  key.rotation.x = angle;
+  // The piano is the only moving shadow caster. Reuse its shadow until a key changes.
+  if (shadowRenderer) shadowRenderer.shadowMap.needsUpdate = true;
 };
 
 // Where a seated pianist's eyes are and where they look, in the room (pianoPlay.js). `cover` is the share
@@ -524,11 +532,13 @@ export const pianistView = (eye, look, camera, cover) => {
 
 // Builds the stage, piano and lights; returns the colliders for main.js to add to the walls
 export const createGrandPiano = (scene, renderer) => {
+  shadowRenderer = renderer;
   const instrument = new THREE.Group();
   instrument.add(...createCase(), createKeyboard(), createMusicDesk(), createLegs());
   instrument.traverse((child) => {
     if (child.isMesh && child.material !== felt) child.castShadow = true;
   });
+  mergeStatic(instrument, { opaqueOnly: true });
   piano.add(instrument, createBench(), createContactShadow());
   piano.scale.setScalar(U);
   const front = new THREE.Vector2(STAGE.x, STAGE.z).addScaledVector(FACING, -STAGE_CENTER_FROM_FRONT * U);
@@ -546,9 +556,17 @@ export const createGrandPiano = (scene, renderer) => {
   const inside = piano.localToWorld(new THREE.Vector3(0.1, CASE.top, -1.0));
   const audience = piano.localToWorld(new THREE.Vector3(2.4, 0, -0.9));
   scene.add(
-    ...createSpot(new THREE.Vector3(center.x, 9.2, center.z), center, { intensity: 2.1, spread: 1.75 * U, penumbra: 0.5, shadow: true }),
-    ...createSpot(new THREE.Vector3(audience.x, 9.2, audience.z), inside, { intensity: 0.7, spread: 0.9 * U, penumbra: 0.7 })
+    ...createSpot(new THREE.Vector3(center.x, 9.2, center.z), center, { intensity: 3.4, spread: 1.9 * U, penumbra: 0.5, shadow: true }),
+    ...createSpot(new THREE.Vector3(audience.x, 9.2, audience.z), inside, { intensity: 1.6, spread: 1.3 * U, penumbra: 0.7 })
   );
+  // Painted light on top of the two spots (fakeGlow.js, no extra lamps): the beam in the air above the
+  // piano and a warm pool on the stage round it
+  const stageTop = FLOOR_Y + STAGE.height * U;
+  const beam = createLightCone(0xffd9a8, 0.25, 1.5 * U, 9.2 - stageTop - 0.3, 0.07);
+  beam.position.set(center.x, 9.2 - 0.3, center.z);
+  const pool = createGlow(0xffd9a8, 3.6 * U, 3.6 * U, 0.4);
+  pool.position.set(center.x, stageTop + 0.02, center.z);
+  scene.add(beam, pool);
 
   // Colliders: the stage (visitors walk round it; the piano is played from the bench, pianoPlay.js),
   // squares along the body (the room's colliders don't turn), and the bench

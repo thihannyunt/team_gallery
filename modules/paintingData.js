@@ -62,7 +62,7 @@ const walls = [
     raise: 12, // lifted so the big frame clears the floor
     frame: 'oak',
     photos: ['cooperate_team_portrait'],
-    origin: { x: -22, z: ROOM.front + 0.5 }, // Front Wall, between the crew wall's corner and the racing simulator
+    origin: { x: -21, z: ROOM.front + 0.5 }, // Front Wall, between the Sky Lounge doorway (room.js) and the racing simulator
     rotationY: 0,
   },
   {
@@ -80,7 +80,7 @@ const walls = [
     rotationY: Math.PI / 2,
   },
   {
-    title: 'Behind the Scenes',
+    // No wall label: it crowded the plant at the sofa's end (galleryDecor.js)
     layout: singleRow,
     layoutOptions: { frame: [20, 25], gap: 8 },
     frame: 'black',

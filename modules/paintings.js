@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { paintingData, wallLabelData } from './paintingData.js';
-import { texturePath } from './textureQuality.js';
+import { loadTexture, assign } from './textureQuality.js';
 
 // Paintings are positioned 0.5 in front of the walls (room.js)
 const WALL_OFFSET = -0.49;
@@ -192,12 +192,10 @@ export function createPaintings(scene, textureLoader) {
 
     // Photo, recessed behind the frame. Unlit, because the combined room lights are brighter than 1 and
     // would clip light photo backgrounds to white, blending them into the mat so the photo edges vanish.
-    const photoTexture = textureLoader.load(texturePath(data.imgSrc));
-    photoTexture.anisotropy = 8; // stays sharp when seen at an angle along the wall
-    const photo = new THREE.Mesh(
-      new THREE.PlaneGeometry(photoWidth, photoHeight),
-      new THREE.MeshBasicMaterial({ map: photoTexture })
-    );
+    // toneMapped off: a photo keeps its own colours, the room's lighting doesn't change them (colorSettings.js)
+    const photo = new THREE.Mesh(new THREE.PlaneGeometry(photoWidth, photoHeight), new THREE.MeshBasicMaterial({ toneMapped: false }));
+    // anisotropy: stays sharp when seen at an angle along the wall
+    loadTexture(data.imgSrc, assign(photo.material, 'map', (texture) => (texture.anisotropy = 8)));
     photo.position.z = WALL_OFFSET + 0.03;
 
     // Mat board extends under the frame so no gaps show at the edges
@@ -232,7 +230,7 @@ export function createPaintings(scene, textureLoader) {
       type: 'painting',
       info: data.info,
       url: data.info.link,
-      photo, // paintingDetail.js swaps in the full-size photo up close on phones
+      photo, // paintingDetail.js swaps in the full-size photo up close
       imgSrc: data.imgSrc,
     };
 

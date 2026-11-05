@@ -1786,6 +1786,20 @@ body.touch-mode .key-hint {
   display: none;
 }
 
+/* three.js's Enter VR button (modules/VRSupport.js), restyled to match the buttons beside it. It sets its
+   own position, size and fading as inline styles, hence the !important. */
+#audio_controls #VRButton {
+  position: static !important;
+  width: auto !important;
+  padding: 6px 12px !important;
+  border: 1px solid rgba(208, 235, 0, 0.18) !important;
+  border-radius: 10px !important;
+  background: var(--cc-teal-glass) !important;
+  color: var(--cc-cream) !important;
+  font: 600 1em var(--cc-font) !important;
+  opacity: 1 !important;
+}
+
 /* The "!" controls button is for phones and tablets only; desktops keep the controls panel */
 #audio_controls #help_button {
   display: none;
@@ -1837,14 +1851,29 @@ body.touch-mode button {
   font-weight: 600;
 }
 
+/* Joystick size and its distance from the bottom-left corner. Tablets get a bigger pad set further in,
+   where the left thumb rests while both hands hold the tablet, not right at the edge. */
+:root {
+  --joystick-size: clamp(136px, 26vmin, 210px);
+  --joystick-left: 32px;
+  --joystick-bottom: 24px;
+}
+
+@media (min-width: 700px) and (min-height: 700px) {
+  :root {
+    --joystick-size: clamp(180px, 24vmin, 250px);
+    --joystick-left: 88px;
+    --joystick-bottom: 80px;
+  }
+}
+
 /* Bottom left, under the left thumb like a game pad, on tablets and on phones held sideways */
 #joystick {
   position: fixed;
-  left: calc(32px + env(safe-area-inset-left));
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  /* 120px on phones, growing with the screen up to 200px on large tablets */
-  width: clamp(120px, 24vmin, 200px);
-  height: clamp(120px, 24vmin, 200px);
+  left: calc(var(--joystick-left) + env(safe-area-inset-left));
+  bottom: calc(var(--joystick-bottom) + env(safe-area-inset-bottom));
+  width: var(--joystick-size);
+  height: var(--joystick-size);
   border-radius: 50%;
   background-color: rgba(2, 75, 74, 0.4);
   border: 2px solid rgba(208, 235, 0, 0.55);
@@ -1866,7 +1895,7 @@ body.touch-mode button {
   body.touch-mode #instrument-button,
   body.touch-mode #piano-button,
   body.touch-mode #racing-button {
-    bottom: calc(clamp(120px, 24vmin, 200px) + 48px + env(safe-area-inset-bottom));
+    bottom: calc(var(--joystick-size) + 48px + env(safe-area-inset-bottom));
   }
 
   /* Upright phones: the joystick takes the bottom middle, so the two sit side by side above "Stand up" */
@@ -1875,7 +1904,7 @@ body.touch-mode button {
     left: 50%;
     transform: translateX(-50%);
     flex-direction: row;
-    bottom: calc(clamp(120px, 24vmin, 200px) + 48px + 56px + env(safe-area-inset-bottom));
+    bottom: calc(var(--joystick-size) + 48px + 56px + env(safe-area-inset-bottom));
   }
 }
 
@@ -2109,6 +2138,26 @@ body.touch-mode #audio_controls button {
   padding: 10px; /* same height as the menu buttons on the left */
   font-size: 16px;
   line-height: 1;
+}
+
+body.touch-mode #audio_controls #VRButton {
+  padding: 10px 12px !important;
+  font-size: 14px !important;
+  line-height: 1;
+}
+
+/* Bigger on touch screens, so a fingertip finds "Sit & watch", "Play" and the rest first time */
+body.touch-mode #seat-button,
+body.touch-mode #photo-button,
+body.touch-mode #arcade-button,
+body.touch-mode #instrument-button,
+body.touch-mode #piano-button,
+body.touch-mode #racing-button {
+  min-height: 52px;
+  padding: 15px 30px;
+  font-size: 17px;
+  white-space: nowrap; /* centred with left: 50%, so it would otherwise wrap at half the screen's width */
+  touch-action: manipulation;
 }
 
 body.touch-mode .music-icon {

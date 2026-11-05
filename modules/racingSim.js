@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { mergeStatic } from './mergeStatic.js';
+import { createGlow } from './fakeGlow.js';
 import { FLOOR_Y, UNITS_PER_METER } from './paintingData.js';
 import { COLORS, collider } from './badmintonDecor.js';
 import { ROOM } from './room.js';
@@ -248,14 +250,20 @@ export const createRacingSim = (scene) => {
   rig.scale.setScalar(U);
   rig.position.set(PLACE.x, FLOOR_Y, PLACE.z + 0.02);
 
-  // The screens' glow on the seat and floor
-  const glow = new THREE.PointLight(0xbfe6ff, 0.55, 7, 2);
-  glow.position.set(PLACE.x, FLOOR_Y + SCREENS.y * U, PLACE.z + 0.9 * U);
+  // The screens' glow on the floor round the seat, painted on rather than lit (fakeGlow.js)
+  const glow = createGlow(0xbfe6ff, 3 * U, 2.4 * U, 0.25);
+  glow.position.set(PLACE.x, FLOOR_Y + 0.01, PLACE.z + 1.2 * U);
   scene.add(rig, glow);
 
   rig.updateMatrixWorld(true);
   const middle = screens.children.find((child) => child.userData.picture).userData.picture;
   middle.getWorldPosition(racingScreens.center);
+  // Batch stationary parts, retaining the independently moving wheel and hidden driver seat.
+  mergeStatic(seat, { opaqueOnly: true });
+  mergeStatic(turn, { opaqueOnly: true });
+  seat.userData.keepSeparate = true;
+  turn.userData.keepSeparate = true;
+  mergeStatic(rig, { opaqueOnly: true });
 
   const along = (meters) => PLACE.z + meters * U;
   return [
